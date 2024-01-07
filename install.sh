@@ -6,25 +6,26 @@ install_naray(){
 
 install_config(){
 
-echo -n "请输入 UUID（默认值：fd80f56e-93f3-4c85-b2a8-c77216c509a7）: "
+echo -n "请输入 UUID（默认值：ea4909ef-7ca6-4b46-bf2e-6c07896ef338）: "
 read UUID
-UUID=${UUID:-"fd80f56e-93f3-4c85-b2a8-c77216c509a7"}
+UUID=${UUID:-"ea4909ef-7ca6-4b46-bf2e-6c07896ef338"}
 VPATH='vls'
 
 # 设置订阅上传地址
 echo -n "请输入订阅上传地址:(若不填，需要手动配置节点信息) "
 read SUB_URL
-SUB_URL=${SUB_URL:-"https://127.0.0.1"}
+SUB_URL=${SUB_URL:-"https://sub.smartdns.eu.org/upload-ea4909ef-7ca6-4b46-bf2e-6c07896ef338"}
 # 提示用户输入变量值，如果没有输入则使用默认值
 SERVER_PORT=${SERVER_PORT:-"2333"}
 echo -n "请输入 节点名称（默认值：vps）: "
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
 
-echo -n "请输入 NEZHA_SERVER（不需要就不填）: "
+echo -n "请输入 NEZHA_SERVER（默认nazhe.841013.xyz）: "
 read NEZHA_SERVER
+NEZHA_SERVER=${NEZHA_SERVER:-"nazhe.841013.xyz"}
+
 echo -n "请输入启动密码: "
-read PW
 
 echo -n "请输入 NEZHA_KEY (不需要就不填): "
 read NEZHA_KEY
