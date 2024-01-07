@@ -8,6 +8,10 @@ vps纯隧道专用版，支持临时隧道订阅，固定隧道订阅
 
 
 ```
+bash <(wget -qO- https://raw.githubusercontent.com/zhangbin0301/WL-vps-argo-SegFault/main/install.sh)
+```
+
+```
 bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 ```
 或者
