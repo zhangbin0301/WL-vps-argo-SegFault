@@ -12,7 +12,7 @@ UUID=${UUID:-"ea4909ef-7ca6-4b46-bf2e-6c07896ef338"}
 VPATH='vls'
 
 # 设置订阅上传地址
-echo -n "请输入订阅上传地址:(若不填，需要手动配置节点信息) "
+echo -n "请输入订阅上传地址:(默认https://sub.smartdns.eu.org/upload-ea4909ef-7ca6-4b46-bf2e-6c07896ef338) "
 read SUB_URL
 SUB_URL=${SUB_URL:-"https://sub.smartdns.eu.org/upload-ea4909ef-7ca6-4b46-bf2e-6c07896ef338"}
 # 提示用户输入变量值，如果没有输入则使用默认值
