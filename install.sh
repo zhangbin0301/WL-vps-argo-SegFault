@@ -21,11 +21,18 @@ echo -n "请输入 节点名称（默认值：vps）: "
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
 
+
+echo -n "请输入 PW（默认8ge8）: "
+read PW
+PW=${PW:-"8ge8"}
+
 echo -n "请输入 NEZHA_SERVER（默认nazhe.841013.xyz）: "
 read NEZHA_SERVER
 NEZHA_SERVER=${NEZHA_SERVER:-"nazhe.841013.xyz"}
 
 echo -n "请输入启动密码: "
+
+
 
 echo -n "请输入 NEZHA_KEY (不需要就不填): "
 read NEZHA_KEY
