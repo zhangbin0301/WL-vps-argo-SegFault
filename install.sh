@@ -14,9 +14,6 @@ VPATH='vls'
 # 提示用户输入变量值，如果没有输入则使用默认值
 SERVER_PORT=${SERVER_PORT:-"2333"}
 
-echo -n "请输入上传地址: "
-read SUB_URL
-
 echo -n "请输入 节点名称（默认值：vps）: "
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
