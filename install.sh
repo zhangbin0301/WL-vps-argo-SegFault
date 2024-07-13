@@ -42,12 +42,7 @@ echo -n "请输入CF优选IP(默认ip.sb) : "
 read CF_IP
 CF_IP=${CF_IP:-"ip.sb"}
 # 设置其他参数
-
-if [[ $PWD == */ ]]; then
-  FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
-else
-  FLIE_PATH="${FLIE_PATH:-${PWD}/worlds/}"
-fi
+FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
 }
 
 install_config2(){
