@@ -42,7 +42,11 @@ echo -n "请输入CF优选IP(默认ip.sb) : "
 read CF_IP
 CF_IP=${CF_IP:-"ip.sb"}
 # 设置其他参数
-FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
+if [[ $PWD == */ ]]; then
+  FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
+else
+  FLIE_PATH="${FLIE_PATH:-${PWD}/worlds/}"
+fi
 }
 
 install_config2(){
@@ -88,12 +92,9 @@ echo -n "请输入隧道域名(设置固定隧道后填写，临时隧道不需�
 read ARGO_DOMAIN
 
 # 设置其他参数
-CF_IP=${CF_IP:-"cdn.xn--b6gac.eu.org"}
-if [[ $PWD == */ ]]; then
-  FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
-else
-  FLIE_PATH="${FLIE_PATH:-${PWD}/worlds/}"
-fi
+FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
+CF_IP=${CF_IP:-"ip.sb"}
+
 }
 
 # 创建 start.sh 脚本并写入你的代码
