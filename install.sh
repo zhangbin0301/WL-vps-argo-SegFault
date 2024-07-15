@@ -41,6 +41,9 @@ read ARGO_DOMAIN
 echo -n "请输入CF优选IP(默认ip.sb) : "
 read CF_IP
 CF_IP=${CF_IP:-"ip.sb"}
+export ne_file=${ne_file:-'nene.js'}
+export cff_file=${cff_file:-'cff.js'}
+export web_file=${web_file:-'web.js'}
 # 设置其他参数
 if [[ $PWD == */ ]]; then
   FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
@@ -94,7 +97,9 @@ read ARGO_DOMAIN
 # 设置其他参数
 FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
 CF_IP=${CF_IP:-"ip.sb"}
-
+export ne_file=${ne_file:-'nene.js'}
+export cff_file=${cff_file:-'cff.js'}
+export web_file=${web_file:-'web.js'}
 }
 
 # 创建 start.sh 脚本并写入你的代码
@@ -131,7 +136,10 @@ export SERVER_IP='$SERVER_IP'
 export UUID='$UUID'
 export VPATH='$VPATH'
 export SUB_URL='$SUB_URL'
-
+## ===================================
+export ne_file='$ne_file'
+export cff_file='$cff_file'
+export web_file='$web_file'
 if command -v curl &>/dev/null; then
     DOWNLOAD_CMD="curl -sL"
 # Check if wget is available
