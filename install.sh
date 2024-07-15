@@ -53,7 +53,7 @@ fi
 }
 
 install_config2(){
-processes=("web.js" "nezha.js" "cff.js" "app")
+processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
 for process in "${processes[@]}"
 do
     pid=$(pgrep -f "$process")
@@ -264,7 +264,7 @@ esac
 
 echo "等待脚本启动...如果等待时间过长，可能是判断不准确，实际已经成功，可以通过观察哪吒自行判断或重启尝试"
 sleep 15
-keyword="web.js"
+keyword="$web_file"
 max_attempts=5
 counter=0
 
@@ -345,7 +345,7 @@ case $choice in
         nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
 echo "等待脚本启动...，如果等待时间过长，可能是判断不准确，实际已经成功，可以通过观察哪吒自行判断"
 sleep 15
-keyword="web.js"
+keyword="$web_file"
 max_attempts=5
 counter=0
 
@@ -427,7 +427,7 @@ if [ "$(systemctl is-active my_script.service)" == "active" ]; then
     systemctl stop my_script.service
     echo "Service stopped."
 fi
-processes=("web.js" "app" "app.js" "cff.js" "nezha.js")
+processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
 for process in "${processes[@]}"
 do
     pid=$(pgrep -f "$process")
@@ -488,7 +488,7 @@ if [ -d "/tmp/worlds/" ]; then
 rm -rf /tmp/worlds/
 fi
 
-processes=("app" "web.js" "cff.js" "nezha.js" "app.js")
+processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
 for process in "${processes[@]}"
 do
     pid=$(pgrep -f "$process")
