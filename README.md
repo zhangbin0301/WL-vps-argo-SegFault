@@ -8,7 +8,7 @@ vps纯隧道专用版
 
 支持开机启动模式，适合长期稳定使用，重启后会自动启动
 
-
+支持vmess,vless,reality三种
 ```
 bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 
