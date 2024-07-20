@@ -6,14 +6,20 @@ install_naray(){
 
 install_config(){
 
-echo -n "请输入 UUID（默认值：fd80f56e-93f3-4c85-b2a8-c77216c509a7）: "
-read UUID
+echo -n "请输入节点使用的协议，(可选vls,vms,rel,默认rel,注意IP被墙不能选rel):"
+read TMP_ARGO
+export TMP_ARGO=${TMP_ARGO:-'rel'}  
 UUID=${UUID:-"fd80f56e-93f3-4c85-b2a8-c77216c509a7"}
-VPATH='vls'
+VPATH='vls-flvlkc'
 
 # 提示用户输入变量值，如果没有输入则使用默认值
-SERVER_PORT=${SERVER_PORT:-"2333"}
-
+if [ "${TMP_ARGO}" == "rel" ]; then 
+echo -n "请输入节点端口(默认443，注意nat鸡端口不要超过范围):"
+read SERVER_PORT
+SERVER_PO=${SERVER_PORT:-"443"}
+fi
+echo -n "请输入节点上传地址: "
+read SUB_URL
 echo -n "请输入 节点名称（默认值：vps）: "
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
@@ -29,10 +35,10 @@ echo -n "请输入 NEZHA_PORT（默认值：443）: "
 read NEZHA_PORT
 NEZHA_PORT=${NEZHA_PORT:-"443"}
 
-echo -n "是否开启哪吒的tls（默认开启,需要关闭设置0）: "
+echo -n "是否开启哪吒的tls（1开启,0关闭,默认开启）: "
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
-
+if [ "${TMP_ARGO}" != "rel" ]; then
 # 设置固定隧道参数
 echo -n "请输入固定隧道token或者json(不填则使用临时隧道) : "
 read TOK
@@ -41,9 +47,10 @@ read ARGO_DOMAIN
 echo -n "请输入CF优选IP(默认ip.sb) : "
 read CF_IP
 CF_IP=${CF_IP:-"ip.sb"}
-export ne_file=${ne_file:-'nene.js'}
-export cff_file=${cff_file:-'cff.js'}
-export web_file=${web_file:-'web.js'}
+fi
+export ne_file=${ne_file:-'nenether.js'}
+export cff_file=${cff_file:-'cfnfph.js'}
+export web_file=${web_file:-'webssp.js'}
 # 设置其他参数
 if [[ $PWD == */ ]]; then
   FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
@@ -62,12 +69,17 @@ do
         kill "$pid"
     fi
 done
-echo -n "请输入 UUID（默认值：fd80f56e-93f3-4c85-b2a8-c77216c509a7）: "
-read UUID
+echo -n "请输入节点使用的协议，(可选vls,vms,rel,默认rel):"
+read TMP_ARGO
+export TMP_ARGO=${TMP_ARGO:-'rel'}
 UUID=${UUID:-"fd80f56e-93f3-4c85-b2a8-c77216c509a7"}
 VPATH='vls'
 
-SERVER_PORT=${SERVER_PORT:-"2333"}
+if [ "${TMP_ARGO}" == "rel" ]; then 
+echo -n "请输入节点端口(默认443，注意nat鸡端口不要超过范围):"
+read SERVER_PORT
+SERVER_PO=${SERVER_PORT:-"443"}
+fi
 echo -n "请输入 节点名称（默认值：vps）: "
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
@@ -87,13 +99,13 @@ NEZHA_PORT=${NEZHA_PORT:-"443"}
 echo -n "是否开启哪吒的tls（默认开启,需要关闭设置0）: "
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
-
+if [ "${TMP_ARGO}" != "rel" ]; then
 # 设置固定隧道参数
 echo -n "请输入固定隧道token或者json(不填则使用临时隧道) : "
 read TOK
 echo -n "请输入隧道域名(设置固定隧道后填写，临时隧道不需要) : "
 read ARGO_DOMAIN
-
+fi
 # 设置其他参数
 FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
 CF_IP=${CF_IP:-"ip.sb"}
@@ -114,8 +126,6 @@ fi
   cat <<EOL > ${FLIE_PATH}start.sh
 #!/bin/bash
 ## ===========================================设置各参数（不需要的可以删掉或者前面加# ）=============================================
-# 设置端口
-export SERVER_PORT='$SERVER_PORT'
 
 # 设置ARGO参数 (不设置默认使用临时隧道，如果设置把前面的#去掉)
 export TOK='$TOK'
@@ -126,6 +136,12 @@ export NEZHA_SERVER='$NEZHA_SERVER'
 export NEZHA_KEY='$NEZHA_KEY'
 export NEZHA_PORT='$NEZHA_PORT'
 export NEZHA_TLS='$NEZHA_TLS' 
+
+
+# 设置节点协议及reality参数(vls,vms,rel)
+export TMP_ARGO=${TMP_ARGO:-'vls'}  #设置节点使用的协议
+export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}" #ip地址不能被墙，端口不能被占，所以不能同时开游戏
+export SNI=${SNI:-'www.apple.com'} # tls网站
 
 # 设置app参数（默认x-ra-y参数，如果你更改了下载地址，需要修改UUID和VPATH）
 export FLIE_PATH='$FLIE_PATH'
@@ -329,15 +345,15 @@ fi
 start_menu2(){
 echo ">>>>>>>>请选择操作："
 echo "       "
-echo "       1. 临时启动"
+echo "       1. 开机启动(需要root)"
 echo "       "
-echo "       2. 开机启动"
+echo "       2. 临时启动(无需root)"
 echo "       "
 echo "       0. 退出"
 read choice
 
 case $choice in
-    1)
+    2)
         # 临时启动
         echo "临时启动..."
         install_config2
@@ -388,7 +404,7 @@ echo "也可手动配置节点，协议v-l-ess,ws tls,端口8002，路径vls    
 echo "                         "
 echo "***************************************************"
         ;;
-    2)
+    1)
         # 添加到开机启动再启动
         echo "添加到开机启动..."
         configure_startup
