@@ -10,11 +10,12 @@ vps纯隧道专用版
 
 
 ```
-bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
+bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
+
 ```
 或者
 ```
-bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
+bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 ```
 带参数一键自动选择自动填数据脚本模板，你可以根据需要修改(按顺序选择1选择2等待10秒回车填入VPS名称填入哪吒服务器填入哪吒key)
 
