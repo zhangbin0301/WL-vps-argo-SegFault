@@ -21,7 +21,7 @@ bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/inst
 ```
 (echo 1 && echo 1 && sleep 12 && echo && echo 30251 && echo vps-e11 && echo xxx.eu.org && echo KighppFtOuhlhnndf) | bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 ```
-解释:脚本操作:选择1，选择1，等待12秒，选择默认rel,填reality端口，填节点名称，填哪吒服务器，填哪吒key，完毕，需要其他协议，你可以自行修改
+脚本操作详解:选择1，选择1，等待12秒，选择默认rel,填reality端口，填节点名称，填哪吒服务器，填哪吒key，完毕，需要其他协议，你可以自行修改
 
 # 免声明:
 
