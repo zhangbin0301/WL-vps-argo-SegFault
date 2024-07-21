@@ -22,8 +22,8 @@ get_system_info() {
 
 install_naray(){
 
-export ne_file=${ne_file:-'nenether.js'}
-export cff_file=${cff_file:-'cfnfph.js'}
+export ne_file=${ne_file:-'neznether.js'}
+export cff_file=${cff_file:-'cffnfph.js'}
 export web_file=${web_file:-'webssp.js'}
 # 设置其他参数
 if [[ $PWD == */ ]]; then
