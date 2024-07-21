@@ -1,7 +1,25 @@
 #!/bin/bash
-echo " =================vps一键脚本隧道版========================"
+
+# 定义颜色
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+PLAIN='\033[0m'
+
+echo -e "${CYAN}=======vps一键脚本隧道版============${PLAIN}"
 echo "                      "
 echo "                      "
+
+# 获取系统信息
+get_system_info() {
+    source /etc/os-release
+    ARCH=$(uname -m)
+    VIRT=$(systemd-detect-virt)
+}
+
 install_naray(){
 
 export ne_file=${ne_file:-'nenether.js'}
@@ -17,47 +35,47 @@ if [ ! -d "${FLIE_PATH}" ]; then
   if mkdir -p -m 755 "${FLIE_PATH}"; then
     echo ""
   else 
-    echo "权限不足，无法创建文件"
+    echo -e "${RED}权限不足，无法创建文件${PLAIN}"
   fi
 fi
+
 install_config(){
 
-echo -n "请输入节点使用的协议，(可选vls,vms,rel,默认rel,注意IP被墙不能选rel):"
+echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel,注意IP被墙不要选rel):${PLAIN}"
 read TMP_ARGO
 export TMP_ARGO=${TMP_ARGO:-'rel'}  
 
 # 提示用户输入变量值，如果没有输入则使用默认值
 if [ "${TMP_ARGO}" == "rel" ]; then 
-echo -n "请输入节点端口(默认443，注意nat鸡端口不要超过范围):"
+echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
 read SERVER_PORT
 SERVER_POT=${SERVER_PORT:-"443"}
 fi
 
-echo -n "请输入 节点名称（默认值：vps）: "
+echo -e -n "${GREEN}请输入节点名称（默认值：vps）: ${PLAIN}"
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
 
-echo -n "请输入 NEZHA_SERVER（不需要就不填）: "
+echo -e -n "${GREEN}请输入 NEZHA_SERVER（不需要就不填）: ${PLAIN}"
 read NEZHA_SERVER
 
-echo -n "请输入 NEZHA_KEY (不需要就不填): "
+echo -e -n "${GREEN}请输入 NEZHA_KEY (不需要就不填): ${PLAIN}"
 read NEZHA_KEY
 
-
-echo -n "请输入 NEZHA_PORT（默认值：443）: "
+echo -e -n "${GREEN}请输入 NEZHA_PORT（默认值：443）: ${PLAIN}"
 read NEZHA_PORT
 NEZHA_PORT=${NEZHA_PORT:-"443"}
 
-echo -n "是否开启哪吒的tls（1开启,0关闭,默认开启）: "
+echo -e -n "${GREEN}是否开启哪吒的tls（1开启,0关闭,默认开启）: ${PLAIN}"
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
 if [ "${TMP_ARGO}" != "rel" ]; then
 # 设置固定隧道参数
-echo -n "请输入固定隧道token或者json(不填则使用临时隧道) : "
+echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
 read TOK
-echo -n "请输入隧道域名(设置固定隧道后填写，临时隧道不需要) : "
+echo -e -n "${GREEN}请输入隧道域名(设置固定隧道需要，临时隧道不需要) : ${PLAIN}"
 read ARGO_DOMAIN
-echo -n "请输入CF优选IP(默认ip.sb) : "
+echo -e -n "${GREEN}请输入CF优选IP(默认ip.sb) : ${PLAIN}"
 read CF_IP
 CF_IP=${CF_IP:-"ip.sb"}
 fi
@@ -74,40 +92,40 @@ do
         kill "$pid" &>/dev/null
     fi
 done
-echo -n "请输入节点使用的协议，(可选vls,vms,rel,默认rel):"
+echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel):${PLAIN}"
 read TMP_ARGO
 export TMP_ARGO=${TMP_ARGO:-'rel'}
 
 
 if [ "${TMP_ARGO}" == "rel" ]; then 
-echo -n "请输入节点端口(默认443，注意nat鸡端口不要超过范围):"
+echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
 read SERVER_PORT
 SERVER_POT=${SERVER_PORT:-"443"}
 fi
-echo -n "请输入 节点名称（默认值：vps）: "
+echo -e -n "${GREEN}请输入 节点名称（默认值：vps）: ${PLAIN}"
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
 
-echo -n "请输入 NEZHA_SERVER（不需要就不填）: "
+echo -e -n "${GREEN}请输入 NEZHA_SERVER（不需要就不填）: ${PLAIN}"
 read NEZHA_SERVER
 
 
-echo -n "请输入 NEZHA_KEY (不需要就不填): "
+echo -e -n "${GREEN}请输入 NEZHA_KEY (不需要就不填): ${PLAIN}"
 read NEZHA_KEY
 
 
-echo -n "请输入 NEZHA_PORT（默认值：443）: "
+echo -e -n "${GREEN}请输入 NEZHA_PORT（默认值：443）: ${PLAIN}"
 read NEZHA_PORT
 NEZHA_PORT=${NEZHA_PORT:-"443"}
 
-echo -n "是否开启哪吒的tls（默认开启,需要关闭设置0）: "
+echo -e -n "${GREEN}是否开启哪吒的tls（默认开启,需要关闭设置0）: ${PLAIN}"
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
 if [ "${TMP_ARGO}" != "rel" ]; then
 # 设置固定隧道参数
-echo -n "请输入固定隧道token或者json(不填则使用临时隧道) : "
+echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
 read TOK
-echo -n "请输入隧道域名(设置固定隧道后填写，临时隧道不需要) : "
+echo -e -n "${GREEN}请输入隧道域名(设置固定隧道需要，临时隧道不需要) : ${PLAIN}"
 read ARGO_DOMAIN
 fi
 # 设置其他参数
@@ -181,7 +199,7 @@ check_and_install_dependencies() {
     # 检查并安装依赖软件
     for dep in "${dependencies[@]}"; do
         if ! command -v "$dep" &>/dev/null; then
-            echo "$dep 命令未安装，将尝试安装..."
+            echo -e "${YELLOW}$dep 命令未安装，将尝试安装...${PLAIN}"
             case "$linux_dist" in
                 "Alpine Linux")
                     # 在 Alpine Linux 上安装软件包
@@ -203,15 +221,15 @@ check_and_install_dependencies() {
                     apt-get install -y "$dep"
                     ;;
                 *)
-                    echo "不支持的 Linux 发行版：$linux_dist"
+                    echo -e "${RED}不支持的 Linux 发行版：$linux_dist${PLAIN}"
                     
                     ;;
             esac
-            echo "$dep 命令已安装。"
+            echo -e "${GREEN}$dep 命令已安装。${PLAIN}"
         fi
     done
 
-    echo "所有依赖已经安装"
+    echo -e "${GREEN}所有依赖已经安装${PLAIN}"
     return 0
 }
 
@@ -268,13 +286,13 @@ EOL
         ;;
 
     *)
-        echo "不支持的 Linux 发行版：$linux_dist"
+        echo -e "${RED}不支持的 Linux 发行版：$linux_dist${PLAIN}"
         
         ;;
 esac
 
 
-echo "等待脚本启动...如果等待时间过长，可能是判断不准确，实际已经成功，可以通过观察哪吒自行判断或重启尝试"
+echo -e "${YELLOW}等待脚本启动...如果等待时间过长，可能是判断不准确，实际已经成功，可以通过观察哪吒自行判断或重启尝试${PLAIN}"
 sleep 15
 keyword="$web_file"
 max_attempts=5
@@ -284,15 +302,15 @@ while [ $counter -lt $max_attempts ]; do
   # 使用pgrep检查包含关键词的进程是否存在
  if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
 
-    echo "***************************************************"
+    echo -e "${CYAN}***************************************************${PLAIN}"
     echo "                          "
-    echo "脚本启动成功"
+    echo -e "${GREEN}       脚本启动成功${PLAIN}"
     echo "                          "
     break
   elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
-    echo "***************************************************"
+    echo -e "${CYAN}***************************************************${PLAIN}"
     echo "                          "
-    echo "脚本启动成功"
+    echo -e "${GREEN}        脚本启动成功${PLAIN}"
     echo "                          "
     
     break
@@ -303,7 +321,7 @@ while [ $counter -lt $max_attempts ]; do
 done
 
 echo "                         "
-echo "**************节点信息*********************   "
+echo -e "${CYAN}************节点信息****************${PLAIN}"
 echo "                         "
 if [ -s "${FLIE_PATH}list.log" ]; then
   sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
@@ -313,7 +331,7 @@ else
   fi
 fi
 echo "                         "
-echo "***************************************************"
+echo -e "${CYAN}***************************************************${PLAIN}"
 
 }
 
@@ -336,23 +354,23 @@ fi
 
 # 输出菜单，让用户选择是否直接启动或添加到开机启动再启动
 start_menu2(){
-echo ">>>>>>>>请选择操作："
+echo -e "${CYAN}>>>>>>>>请选择操作：${PLAIN}"
 echo "       "
-echo "       1. 开机启动(需要root)"
+echo -e "${GREEN}       1. 开机启动(需要root)${PLAIN}"
 echo "       "
-echo "       2. 临时启动(无需root)"
+echo -e "${GREEN}       2. 临时启动(无需root)${PLAIN}"
 echo "       "
-echo "       0. 退出"
+echo -e "${GREEN}       0. 退出${PLAIN}"
 read choice
 
 case $choice in
     2)
         # 临时启动
-        echo "临时启动..."
+        echo -e "${YELLOW}临时启动...${PLAIN}"
         install_config2
         install_start
         nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
-echo "等待脚本启动...，如果等待时间过长，可能是判断不准确，实际已经成功，可以通过观察哪吒自行判断"
+echo -e "${YELLOW}等待脚本启动...，如果等待时间过长，可能是判断不准确，实际已经成功，可以通过观察哪吒自行判断${PLAIN}"
 sleep 15
 keyword="$web_file"
 max_attempts=5
@@ -362,15 +380,15 @@ while [ $counter -lt $max_attempts ]; do
   # 使用pgrep检查包含关键词的进程是否存在
  if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
 
-    echo "***************************************************"
+    echo -e "${CYAN}***************************************************${PLAIN}"
     echo "                          "
-    echo "脚本启动成功"
+    echo -e "${GREEN}        脚本启动成功${PLAIN}"
     echo "                          "
     break
   elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
-    echo "***************************************************"
+    echo -e "${CYAN}***************************************************${PLAIN}"
     echo "                          "
-    echo "脚本启动成功"
+    echo -e "${GREEN}       脚本启动成功${PLAIN}"
     echo "                          "
     
     break
@@ -381,7 +399,7 @@ while [ $counter -lt $max_attempts ]; do
 done
 
 echo "                         "
-echo "**************节点信息*********************   "
+echo -e "${CYAN}************节点信息******************${PLAIN}"
 echo "                         "
 if [ -s "${FLIE_PATH}list.log" ]; then
   sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
@@ -391,20 +409,20 @@ else
   fi
 fi
 echo "                         "
-echo "***************************************************"
+echo -e "${CYAN}***************************************************${PLAIN}"
         ;;
     1)
         # 添加到开机启动再启动
-        echo "添加到开机启动..."
+        echo -e "${YELLOW}      添加到开机启动...${PLAIN}"
         configure_startup
-        echo "已添加到开机启动"
+        echo -e "${GREEN}      已添加到开机启动${PLAIN}"
         ;;
 	  0)
 	    exit 1
 	    ;;
   	*)
 	  clear
-	  echo -e "${Error}:请输入正确数字 [0-2]"
+	  echo -e "${RED}错误:请输入正确数字 [0-2]${PLAIN}"
 	  sleep 5s
 	  start_menu2
 	  ;;
@@ -422,7 +440,7 @@ install_bbr(){
     elif command -v wget &>/dev/null; then
        bash <(wget -qO- https://git.io/kernel.sh)
     else
-        echo "Error: Neither curl nor wget found. Please install one of them."
+        echo -e "${RED}错误: 未找到 curl 或 wget。请安装其中之一。${PLAIN}"
         sleep 30
         
     fi
@@ -430,7 +448,7 @@ install_bbr(){
 reinstall_naray(){
 if [ "$(systemctl is-active my_script.service)" == "active" ]; then
     systemctl stop my_script.service
-    echo "Service stopped."
+    echo -e "${GREEN}服务已停止。${PLAIN}"
 fi
 processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
 for process in "${processes[@]}"
@@ -450,37 +468,35 @@ service_name="my_script.service"
 
 # 检查服务是否处于活动状态
 if [ "$(systemctl is-active $service_name)" == "active" ]; then
-    echo "Service $service_name is still active. Stopping it..."
+    echo -e "${YELLOW}服务 $service_name 仍处于活动状态。正在停止...${PLAIN}"
     systemctl stop $service_name
-    echo "Service stopped."
+    echo -e "${GREEN}服务已停止。${PLAIN}"
 fi
 
 # 检查服务是否已禁用
 if [ "$(systemctl is-enabled $service_name)" == "enabled" ]; then
-    echo "Disabling $service_name..."
+    echo -e "${YELLOW}正在禁用 $service_name...${PLAIN}"
     systemctl disable $service_name
-    echo "Service $service_name disabled."
+    echo -e "${GREEN}服务 $service_name 已禁用。${PLAIN}"
 fi
 
 # 检查并删除服务文件
 if [ -f "/etc/systemd/system/$service_name" ]; then
-    echo "Removing service file /etc/systemd/system/$service_name..."
+    echo -e "${YELLOW}正在删除服务文件 /etc/systemd/system/$service_name...${PLAIN}"
     rm "/etc/systemd/system/$service_name"
-    echo "Service file removed."
+    echo -e "${GREEN}服务文件已删除。${PLAIN}"
 elif [ -f "/lib/systemd/system/$service_name" ]; then
-    echo "Removing service file /lib/systemd/system/$service_name..."
+    echo -e "${YELLOW}正在删除服务文件 /lib/systemd/system/$service_name...${PLAIN}"
     rm "/lib/systemd/system/$service_name"
-    echo "Service file removed."
+    echo -e "${GREEN}服务文件已删除。${PLAIN}"
 else
-    echo "Service file not found in /etc/systemd/system/ or /lib/systemd/system/."
+    echo -e "${YELLOW}未在 /etc/systemd/system/ 或 /lib/systemd/system/ 找到服务文件。${PLAIN}"
 fi
 
 # 重新加载 systemd
-echo "Reloading systemd..."
+echo -e "${YELLOW}正在重新加载 systemd...${PLAIN}"
 systemctl daemon-reload
-echo "Systemd reloaded."
-
-
+echo -e "${GREEN}Systemd 已重新加载。${PLAIN}"
 
 processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
 for process in "${processes[@]}"
@@ -494,20 +510,21 @@ done
 
 }
 start_menu1(){
-echo "————————————选择菜单————————————"
-echo " "
-echo "————————————1、安装 X-R-A-Y————————————"
-echo " "
-echo "————————————2、安装 bbr加速————————————"
-echo " "
-echo "————————————3、卸载X-R-A-Y————————————"
-echo " "
-echo "————————————0、退出脚本————————————"
-echo " "
-read -p " 请输入数字 [0-3]:" numb
-case "$numb" in
+clear
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e "                          ${PURPLE}VPS 一键脚本隧道版${PLAIN}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e " ${GREEN}系统信息:${PLAIN} $PRETTY_NAME ($ARCH)"
+echo -e " ${GREEN}虚拟化:${PLAIN} $VIRT"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR 加速${PLAIN}"
+echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}0.${PLAIN} 退出脚本"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+read -p " 请输入选择 [0-3]: " choice
+case "$choice" in
 	1)
-        
 	install_naray
 	;;
 	2)
@@ -521,11 +538,15 @@ case "$numb" in
 	;;
 	*)
 	clear
-	echo -e "${Error}:请输入正确数字 [0-4]"
+	echo -e "${RED}请输入正确数字 [0-3]${PLAIN}"
 	sleep 5s
 	start_menu1
 	;;
 esac
 }
 
+# 在脚本开始时获取系统信息
+get_system_info
+
+# 启动主菜单
 start_menu1
