@@ -17,11 +17,11 @@ bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/insta
 ```
 bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 ```
-带参数一键自动选择启动脚本，全程不要动，自动填
+带参数选择reality的一键自动选择启动脚本，全程不要动，自动填写，一分钟馁部署好
 ```
 (echo 1 && echo 1 && sleep 15 && echo && echo 30251 && echo vps-e11 && echo xxx.eu.org && echo KighppFtOuhlhnndf) | bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 
-解释:选择步骤:选择1，选择1，等待15秒，选择默认rel,填reality端口，填节点名称，填哪吒服务器，填哪吒key，完毕，你可以自行修改
+解释:选择步骤:选择1，选择1，等待15秒，选择默认rel,填reality端口，填节点名称，填哪吒服务器，填哪吒key，完毕，需要其他协议，你可以自行修改
 ```
 # 免声明:
 
