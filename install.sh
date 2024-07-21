@@ -480,18 +480,7 @@ echo "Reloading systemd..."
 systemctl daemon-reload
 echo "Systemd reloaded."
 
-echo "Service removal completed."
-if [[ $PWD == */ ]]; then
-  FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
-else
-  FLIE_PATH="${FLIE_PATH:-${PWD}/worlds/}"
-fi
-if [ -d "${FLIE_PATH}" ]; then
-rm -rf ${FLIE_PATH}
-fi
-if [ -d "/tmp/worlds/" ]; then
-rm -rf /tmp/worlds/
-fi
+
 
 processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
 for process in "${processes[@]}"
