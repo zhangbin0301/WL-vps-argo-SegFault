@@ -17,12 +17,11 @@ bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/insta
 ```
 bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 ```
-带参数一键自动选择自动填数据脚本模板，你可以根据需要修改(按顺序选择1选择2等待10秒回车填入VPS名称填入哪吒服务器填入哪吒key)
-
+带参数一键自动选择启动脚本，全程不要动，自动填
 ```
-(echo 1 && echo 2 && sleep 10 && echo && echo vps-e11 && echo xxx.eu.org && echo KighppFtOuhlhnndf) | bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
+(echo 1 && echo 1 && sleep 15 && echo && echo 30251 && echo vps-e11 && echo xxx.eu.org && echo KighppFtOuhlhnndf) | bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 
-
+解释:选择步骤:选择1，选择1，等待15秒，选择默认rel,填reality端口，填节点名称，填哪吒服务器，填哪吒key，完毕，你可以自行修改
 ```
 # 免声明:
 
