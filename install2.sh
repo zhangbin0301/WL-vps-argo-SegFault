@@ -439,7 +439,7 @@ install_bbr(){
         curl -fsSL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/menu.sh -o menu.sh && chmod +x menu.sh && ./menu.sh h
     # Check if wget is available
     elif command -v wget &>/dev/null; then
-       bash <(wget -qO- https://git.io/kernel.sh)
+       wget -qO menu.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/menu.sh && chmod +x menu.sh && ./menu.sh h
     else
         echo -e "${RED}错误: 未找到 curl 或 wget。请安装其中之一。${PLAIN}"
         sleep 30
