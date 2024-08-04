@@ -436,10 +436,10 @@ install_bbr(){
 
     # Check if curl is available
     if command -v curl &>/dev/null; then
-        curl -fsSL https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh -o menu.sh && chmod +x menu.sh && ./menu.sh h
+        curl -fsSL https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh -o menu.sh && chmod +x menu.sh && ./menu.sh
     # Check if wget is available
     elif command -v wget &>/dev/null; then
-       wget -qO menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && chmod +x menu.sh && ./menu.sh h
+       wget -qO menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && chmod +x menu.sh && ./menu.sh
     else
         echo -e "${RED}错误: 未找到 curl 或 wget。请安装其中之一。${PLAIN}"
         sleep 30
