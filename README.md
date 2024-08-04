@@ -10,8 +10,7 @@ vps纯隧道专用版
 
 支持vmess,vless,reality三种
 ```
-bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
-
+curl -fsSL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 ```
 或者
 ```
