@@ -436,7 +436,7 @@ install_bbr(){
 
     # Check if curl is available
     if command -v curl &>/dev/null; then
-        bash <(curl -sL https://git.io/kernel.sh)
+        curl -fsSL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/menu.sh -o menu.sh && chmod +x menu.sh && ./menu.sh h
     # Check if wget is available
     elif command -v wget &>/dev/null; then
        bash <(wget -qO- https://git.io/kernel.sh)
@@ -519,7 +519,7 @@ echo -e " ${GREEN}系统信息:${PLAIN} $PRETTY_NAME ($ARCH)"
 echo -e " ${GREEN}虚拟化:${PLAIN} $VIRT"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
-echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR 加速${PLAIN}"
+echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}F大warp脚本${PLAIN}"
 echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
 echo -e " ${GREEN}0.${PLAIN} 退出脚本"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
