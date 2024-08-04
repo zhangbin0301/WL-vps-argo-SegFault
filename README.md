@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh
 ```
 或者
 ```
-bash <(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
+curl -fsSLwget -qO https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 ```
 带参数选择reality的一键自动选择启动脚本，全程不要动，自动填写，一分钟馁部署好
 ```
