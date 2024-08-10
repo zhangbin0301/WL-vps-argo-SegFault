@@ -43,7 +43,7 @@ install_config(){
 
 #echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel,注意IP被墙不要选rel):${PLAIN}"
 #read TMP_ARGO
-export TMP_ARGO=${TMP_ARGO:-'3'}  
+export TMP_ARGO='3'
 
 # 提示用户输入变量值，如果没有输入则使用默认值
 
@@ -94,7 +94,7 @@ do
 done
 #echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel):${PLAIN}"
 #read TMP_ARGO
-export TMP_ARGO=${TMP_ARGO:-'3'}
+export TMP_ARGO='3'
 
 
 
