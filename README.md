@@ -1,4 +1,4 @@
-# vps-Argo一键脚本
+# vps-Argo一键xray脚本
 
 声明：本仓库仅为自用备份，不适合别人使用，非开源项目，请勿擅自使用与传播，否则责任自负。
 
@@ -8,7 +8,7 @@ vps纯隧道专用版
 
 支持开机启动模式，适合长期稳定使用，重启后会自动启动
 
-支持vmess,vless,reality三种
+支持vmess,vless,reality三种协议
 ```
 curl -fsSL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
 ```
