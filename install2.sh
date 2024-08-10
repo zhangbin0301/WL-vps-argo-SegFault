@@ -41,16 +41,16 @@ fi
 
 install_config(){
 
-echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel,注意IP被墙不要选rel):${PLAIN}"
-read TMP_ARGO
-export TMP_ARGO=${TMP_ARGO:-'rel'}  
+#echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel,注意IP被墙不要选rel):${PLAIN}"
+#read TMP_ARGO
+export TMP_ARGO=${TMP_ARGO:-'3'}  
 
 # 提示用户输入变量值，如果没有输入则使用默认值
-if [ "${TMP_ARGO}" == "rel" ]; then 
+
 echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
 read SERVER_PORT
 SERVER_POT=${SERVER_PORT:-"443"}
-fi
+
 echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
 read SUB_URL
 echo -e -n "${GREEN}请输入节点名称（默认值：vps）: ${PLAIN}"
@@ -70,7 +70,7 @@ NEZHA_PORT=${NEZHA_PORT:-"443"}
 echo -e -n "${GREEN}是否开启哪吒的tls（1开启,0关闭,默认开启）: ${PLAIN}"
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
-if [ "${TMP_ARGO}" != "rel" ]; then
+
 # 设置固定隧道参数
 echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
 read TOK
@@ -79,7 +79,6 @@ read ARGO_DOMAIN
 echo -e -n "${GREEN}请输入CF优选IP(默认ip.sb) : ${PLAIN}"
 read CF_IP
 CF_IP=${CF_IP:-"ip.sb"}
-fi
 
 }
 
@@ -93,16 +92,16 @@ do
         kill "$pid" &>/dev/null
     fi
 done
-echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel):${PLAIN}"
-read TMP_ARGO
-export TMP_ARGO=${TMP_ARGO:-'rel'}
+#echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel):${PLAIN}"
+#read TMP_ARGO
+export TMP_ARGO=${TMP_ARGO:-'3'}
 
 
-if [ "${TMP_ARGO}" == "rel" ]; then 
+
 echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
 read SERVER_PORT
 SERVER_POT=${SERVER_PORT:-"443"}
-fi
+
 echo -e -n "${GREEN}请输入 节点名称（默认值：vps）: ${PLAIN}"
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
@@ -122,13 +121,13 @@ NEZHA_PORT=${NEZHA_PORT:-"443"}
 echo -e -n "${GREEN}是否开启哪吒的tls（默认开启,需要关闭设置0）: ${PLAIN}"
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
-if [ "${TMP_ARGO}" != "rel" ]; then
+
 # 设置固定隧道参数
 echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
 read TOK
 echo -e -n "${GREEN}请输入隧道域名(设置固定隧道需要，临时隧道不需要) : ${PLAIN}"
 read ARGO_DOMAIN
-fi
+
 # 设置其他参数
 FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
 CF_IP=${CF_IP:-"ip.sb"}
@@ -153,7 +152,7 @@ export NEZHA_TLS='$NEZHA_TLS'
 
 
 # 设置节点协议及reality参数(vls,vms,rel)
-export TMP_ARGO=${TMP_ARGO:-'vls'}  #设置节点使用的协议
+export TMP_ARGO=${TMP_ARGO:-'3'}  #设置节点使用的协议
 export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}" #ip地址不能被墙，端口不能被占，所以不能同时开游戏
 export SNI=${SNI:-'www.apple.com'} # tls网站
 
@@ -181,9 +180,9 @@ else
 fi
 arch=\$(uname -m)
 if [[ \$arch == "x86_64" ]]; then
-    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd > /tmp/app
+    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd2 > /tmp/app
 else
-    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm > /tmp/app
+    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm2 > /tmp/app
 fi
 
 chmod 777 /tmp/app && /tmp/app
