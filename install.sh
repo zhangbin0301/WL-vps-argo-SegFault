@@ -150,7 +150,7 @@ export NEZHA_TLS='$NEZHA_TLS'
 
 
 # 设置节点协议及reality参数(vls,vms,rel)
-export TMP_ARGO=${TMP_ARGO:-'3'}  #设置节点使用的协议
+export TMP_ARGO=${TMP_ARGO:-'rel'}  #设置节点使用的协议
 export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}" #ip地址不能被墙，端口不能被占，所以不能同时开游戏
 export SNI=${SNI:-'www.apple.com'} # tls网站
 
@@ -158,7 +158,6 @@ export SNI=${SNI:-'www.apple.com'} # tls网站
 export FLIE_PATH='$FLIE_PATH'
 export CF_IP='$CF_IP'
 export SUB_NAME='$SUB_NAME'
-export SERVER_IP='$SERVER_IP'
 ## ===========================================设置x-ra-y下载地址（建议直接使用默认）===============================
 
 export SUB_URL='$SUB_URL'
