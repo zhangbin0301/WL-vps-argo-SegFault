@@ -322,17 +322,17 @@ rm_naray(){
 
 start_menu1(){
 clear
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
-echo -e "                          ${PURPLE}VPS 一键脚本隧道版${PLAIN}"
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e "${PURPLE}VPS 一键脚本隧道版${PLAIN}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 echo -e " ${GREEN}系统信息:${PLAIN} $PRETTY_NAME ($ARCH)"
 echo -e " ${GREEN}虚拟化:${PLAIN} $VIRT"
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
 echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR 加速${PLAIN}"
 echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
 echo -e " ${GREEN}0.${PLAIN} 退出脚本"
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 read -p " 请输入选择 [0-3]: " choice
 case "$choice" in
 	1)
