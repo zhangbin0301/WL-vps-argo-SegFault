@@ -41,9 +41,9 @@ fi
 
 install_config(){
 
-echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys,默认hys):${PLAIN}"
+echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys,默认vls):${PLAIN}"
 read TMP_ARGO
-export TMP_ARGO=${TMP_ARGO:-'hys'}  
+export TMP_ARGO=${TMP_ARGO:-'vls'}  
 
 # 提示用户输入变量值，如果没有输入则使用默认值
 if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
@@ -91,9 +91,9 @@ do
         kill "$pid" &>/dev/null
     fi
 done
-echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys默认hys):${PLAIN}"
+echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys默认vls):${PLAIN}"
 read TMP_ARGO
-export TMP_ARGO=${TMP_ARGO:-'hys'}
+export TMP_ARGO=${TMP_ARGO:-'vls'}
 
 
 if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
