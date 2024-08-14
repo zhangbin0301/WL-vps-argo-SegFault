@@ -194,7 +194,7 @@ EOL
     # Function: Check and install dependencies
     check_and_install_dependencies() {
         # List of dependencies
-        dependencies=("curl" "pgrep")
+        dependencies=("curl" "pgrep" "pidof")
 
         # Check and install dependencies
         for dep in "${dependencies[@]}"; do
@@ -255,8 +255,7 @@ if command -v systemctl &>/dev/null; then
     echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
 else
    echo "#!/bin/bash" > /etc/rc.local
-   echo "${FLIE_PATH}start.sh" >> /etc/rc.local
-   echo "exist 0" >> /etc/rc.local
+   echo "nohup ${FLIE_PATH}start.sh &" >> /etc/rc.local
     chmod +x /etc/rc.local
     echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
     nohup ${FLIE_PATH}start.sh &
