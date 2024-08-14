@@ -254,7 +254,7 @@ EOL
              systemctl start my_script.service
             echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
         else
-            echo "${FLIE_PATH}start.sh" |  tee -a /etc/rc.local > /dev/null
+             sed -i '/^exit 0/i ${FILE_PATH}start.sh' /etc/rc.local
              chmod +x /etc/rc.local
              echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
              nohup ${FLIE_PATH}start.sh &
