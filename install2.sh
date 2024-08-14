@@ -22,8 +22,8 @@ get_system_info() {
 
 install_naray(){
 
-export ne_file=${ne_file:-'neznether.js'}
-export cff_file=${cff_file:-'cffnfph.js'}
+export ne_file=${ne_file:-'nenether.js'}
+export cff_file=${cff_file:-'cfnfph.js'}
 export web_file=${web_file:-'webssp.js'}
 # 设置其他参数
 if [[ $PWD == */ ]]; then
@@ -41,11 +41,16 @@ fi
 
 install_config(){
 
-# 提示用户输入变量值，如果没有输入则使用默认值
+echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys,默认hys):${PLAIN}"
+read TMP_ARGO
+export TMP_ARGO=${TMP_ARGO:-'hys'}  
 
+# 提示用户输入变量值，如果没有输入则使用默认值
+if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
 echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
 read SERVER_PORT
 SERVER_POT=${SERVER_PORT:-"443"}
+fi
 
 echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
 read SUB_URL
@@ -67,7 +72,7 @@ NEZHA_PORT=${NEZHA_PORT:-"443"}
 echo -e -n "${GREEN}是否开启哪吒的tls（1开启,0关闭,默认开启）: ${PLAIN}"
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
-
+if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
 # 设置固定隧道参数
 echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
 read TOK
@@ -75,8 +80,8 @@ echo -e -n "${GREEN}请输入隧道域名(设置固定隧道需要，临时隧�
 read ARGO_DOMAIN
 echo -e -n "${GREEN}请输入CF优选IP(默认ip.sb) : ${PLAIN}"
 read CF_IP
+fi
 CF_IP=${CF_IP:-"ip.sb"}
-
 }
 
 install_config2(){
@@ -89,11 +94,16 @@ do
         kill "$pid" &>/dev/null
     fi
 done
+echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys默认hys):${PLAIN}"
+read TMP_ARGO
+export TMP_ARGO=${TMP_ARGO:-'hys'}
 
+
+if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
 echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
 read SERVER_PORT
 SERVER_POT=${SERVER_PORT:-"443"}
-
+fi
 echo -e -n "${GREEN}请输入 节点名称（默认值：vps）: ${PLAIN}"
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
@@ -113,13 +123,13 @@ NEZHA_PORT=${NEZHA_PORT:-"443"}
 echo -e -n "${GREEN}是否开启哪吒的tls（默认开启,需要关闭设置0）: ${PLAIN}"
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
-
+if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
 # 设置固定隧道参数
 echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
 read TOK
 echo -e -n "${GREEN}请输入隧道域名(设置固定隧道需要，临时隧道不需要) : ${PLAIN}"
 read ARGO_DOMAIN
-
+fi
 # 设置其他参数
 FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
 CF_IP=${CF_IP:-"ip.sb"}
@@ -131,6 +141,7 @@ install_start(){
   cat <<EOL > ${FLIE_PATH}start.sh
 #!/bin/bash
 ## ===========================================设置各参数（不需要的可以删掉或者前面加# ）=============================================
+
 # 设置ARGO参数 (不设置默认使用临时隧道，如果设置把前面的#去掉)
 export TOK='$TOK'
 export ARGO_DOMAIN='$ARGO_DOMAIN'
@@ -141,8 +152,9 @@ export NEZHA_KEY='$NEZHA_KEY'
 export NEZHA_PORT='$NEZHA_PORT'
 export NEZHA_TLS='$NEZHA_TLS' 
 
+
 # 设置节点协议及reality参数(vls,vms,rel)
-export TMP_ARGO='3x'
+export TMP_ARGO=${TMP_ARGO:-'vls'}  #设置节点使用的协议
 export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}" #ip地址不能被墙，端口不能被占，所以不能同时开游戏
 export SNI=${SNI:-'www.apple.com'} # tls网站
 
@@ -150,6 +162,10 @@ export SNI=${SNI:-'www.apple.com'} # tls网站
 export FLIE_PATH='$FLIE_PATH'
 export CF_IP='$CF_IP'
 export SUB_NAME='$SUB_NAME'
+export SERVER_IP='$SERVER_IP'
+## ===========================================设置x-ra-y下载地址（建议直接使用默认）===============================
+
+export SUB_URL='$SUB_URL'
 ## ===================================
 export ne_file='$ne_file'
 export cff_file='$cff_file'
@@ -166,10 +182,11 @@ else
 fi
 arch=\$(uname -m)
 if [[ \$arch == "x86_64" ]]; then
-    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd2 > /tmp/app
+    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd > /tmp/app
 else
-    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm2 > /tmp/app
+    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm > /tmp/app
 fi
+
 chmod 777 /tmp/app && /tmp/app
 EOL
 
@@ -420,10 +437,10 @@ install_bbr(){
 
     # Check if curl is available
     if command -v curl &>/dev/null; then
-        curl -fsSL https://gitlab.com/fscarmen/warp/-/raw/main/warp-go.sh -o menu.sh && chmod +x menu.sh && ./menu.sh
+        bash <(curl -sL https://git.io/kernel.sh)
     # Check if wget is available
     elif command -v wget &>/dev/null; then
-       wget -qO menu.sh https://gitlab.com/fscarmen/warp/-/raw/main/warp-go.sh && chmod +x menu.sh && ./menu.sh
+       bash <(wget -qO- https://git.io/kernel.sh)
     else
         echo -e "${RED}错误: 未找到 curl 或 wget。请安装其中之一。${PLAIN}"
         sleep 30
@@ -503,7 +520,7 @@ echo -e " ${GREEN}系统信息:${PLAIN} $PRETTY_NAME ($ARCH)"
 echo -e " ${GREEN}虚拟化:${PLAIN} $VIRT"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
-echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}F大warp脚本${PLAIN}"
+echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR 加速${PLAIN}"
 echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
 echo -e " ${GREEN}0.${PLAIN} 退出脚本"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
