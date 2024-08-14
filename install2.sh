@@ -9,7 +9,7 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 PLAIN='\033[0m'
 
-echo -e "${CYAN}=======vps一键脚本隧道版============${PLAIN}"
+echo -e "${CYAN}vps一键脚本隧道版${PLAIN}"
 echo "                      "
 echo "                      "
 
