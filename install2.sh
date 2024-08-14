@@ -247,22 +247,23 @@ WantedBy=multi-user.target
 EOL
 
         # Move service file to system directory and enable
-        if command -v systemctl &>/dev/null; then
-             mv /tmp/my_script.service /etc/systemd/system/
-             systemctl daemon-reload
-             systemctl enable my_script.service
-             systemctl start my_script.service
-            echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
-        else
-cat > /etc/rc.local <<EOF
+if command -v systemctl &>/dev/null; then
+    mv /tmp/my_script.service /etc/systemd/system/
+    systemctl daemon-reload
+    systemctl enable my_script.service
+    systemctl start my_script.service
+    echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
+else
+    cat > /etc/rc.local <<EOF
 #!/bin/bash
 ${FILE_PATH}start.sh
 exit 0
 EOF    
-             chmod +x /etc/rc.local
-             echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
-             nohup ${FLIE_PATH}start.sh &
-        fi
+    chmod +x /etc/rc.local
+    echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
+    nohup ${FILE_PATH}start.sh &
+fi
+
 
         echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
         sleep 15
