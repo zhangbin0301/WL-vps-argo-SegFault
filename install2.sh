@@ -254,7 +254,7 @@ EOL
              systemctl start my_script.service
             echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
         else
-             cat > /etc/rc.local <<EOF
+cat > /etc/rc.local <<EOF
 #!/bin/bash
 ${FILE_PATH}start.sh
 exit 0
