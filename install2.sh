@@ -258,6 +258,7 @@ else
    echo "${FLIE_PATH}start.sh &" >> /etc/rc.local
    echo "exit 0" >> /etc/rc.local
    chmod +x /etc/rc.local
+   rc-update add local default
    echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
    nohup ${FLIE_PATH}start.sh &
 fi
