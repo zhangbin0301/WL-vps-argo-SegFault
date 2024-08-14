@@ -146,8 +146,8 @@ EOL
         chmod +x ${FLIE_PATH}start.sh
     }
 
-    # 函数：配置开机启动
-    configure_startup() {
+    # 函数：配置开机启动并立即启动
+    configure_startup_and_run() {
         check_and_install_dependencies
         if [ -s "${FLIE_PATH}start.sh" ]; then
             rm_naray
@@ -155,28 +155,7 @@ EOL
         install_config
         install_start
 
-        cat <<EOL > /etc/init.d/my_startup_script
-#!/sbin/openrc-run
-
-name="\$RC_SVCNAME"
-command="${FLIE_PATH}start.sh"
-command_background=true
-pidfile="/run/\$RC_SVCNAME.pid"
-
-depend() {
-    need net
-}
-EOL
-
-        chmod +x /etc/init.d/my_startup_script
-
-        case "$linux_dist" in
-            "Alpine Linux")
-                rc-update add my_startup_script default 2>/dev/null
-                rc-service my_startup_script start 2>/dev/null
-                ;;
-            "Ubuntu" | "Debian" | "CentOS")
-                cat <<EOL > /etc/systemd/system/my_startup_script.service
+        cat <<EOL > /etc/systemd/system/my_startup_script.service
 [Unit]
 Description=My Startup Script
 After=network.target
@@ -189,18 +168,10 @@ User=$(whoami)
 [Install]
 WantedBy=multi-user.target
 EOL
-                systemctl enable my_startup_script.service 2>/dev/null
-                systemctl start my_startup_script.service 2>/dev/null
-                ;;
-            *)
-                if [ ! -f /etc/rc.local ]; then
-                    echo '#!/bin/sh -e' > /etc/rc.local
-                    echo 'exit 0' >> /etc/rc.local
-                    chmod +x /etc/rc.local
-                fi
-                sed -i '/exit 0/i '"${FLIE_PATH}"'start.sh &' /etc/rc.local
-                ;;
-        esac
+
+        systemctl daemon-reload
+        systemctl enable my_startup_script.service
+        systemctl start my_startup_script.service
 
         echo -e "${YELLOW}等待脚本启动...${PLAIN}"
         sleep 15
@@ -232,65 +203,7 @@ EOL
         echo -e "${CYAN}***************************************************${PLAIN}"
     }
 
-    start_menu2(){
-        echo -e "${CYAN}>>>>>>>>请选择操作：${PLAIN}"
-        echo -e "${GREEN}1. 开机启动(需要root)${PLAIN}"
-        echo -e "${GREEN}2. 临时启动(无需root)${PLAIN}"
-        echo -e "${GREEN}0. 退出${PLAIN}"
-        read choice
-
-        case $choice in
-            2)
-                echo -e "${YELLOW}临时启动...${PLAIN}"
-                install_config
-                install_start
-                nohup ${FLIE_PATH}start.sh >/dev/null 2>&1 &
-                echo -e "${YELLOW}等待脚本启动...${PLAIN}"
-                sleep 15
-                keyword="$web_file"
-                max_attempts=5
-                counter=0
-
-                while [ $counter -lt $max_attempts ]; do
-                  if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
-                    echo -e "${GREEN}脚本启动成功${PLAIN}"
-                    break
-                  elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
-                    echo -e "${GREEN}脚本启动成功${PLAIN}"
-                    break
-                  else
-                    sleep 10
-                    ((counter++))
-                  fi
-                done
-
-                echo -e "${CYAN}************节点信息******************${PLAIN}"
-                if [ -s "${FLIE_PATH}list.log" ]; then
-                  sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
-                else
-                  if [ -s "/tmp/list.log" ]; then
-                    sed 's/{PASS}/vless/g' /tmp/list.log | cat
-                  fi
-                fi
-                echo -e "${CYAN}***************************************************${PLAIN}"
-                ;;
-            1)
-                echo -e "${YELLOW}添加到开机启动...${PLAIN}"
-                configure_startup
-                echo -e "${GREEN}已添加到开机启动${PLAIN}"
-                ;;
-            0)
-                exit 0
-                ;;
-            *)
-                clear
-                echo -e "${RED}错误:请输入正确数字 [0-2]${PLAIN}"
-                sleep 5s
-                start_menu2
-                ;;
-        esac
-    }
-    start_menu2
+    configure_startup_and_run
 }
 
 install_bbr(){
@@ -331,7 +244,7 @@ echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━�
 echo -e " ${GREEN}系统信息:${PLAIN} $PRETTY_NAME ($ARCH)"
 echo -e " ${GREEN}虚拟化:${PLAIN} $VIRT"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
-echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}1.${PLAIN} 安装并启动 ${YELLOW}X-R-A-Y${PLAIN}"
 echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR 加速${PLAIN}"
 echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
 echo -e " ${GREEN}0.${PLAIN} 退出脚本"
