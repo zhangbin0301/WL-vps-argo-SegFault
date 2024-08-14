@@ -49,6 +49,7 @@ SERVER_POT=${SERVER_PORT:-"443"}
 
 echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
 read SUB_URL
+
 echo -e -n "${GREEN}请输入节点名称（默认值：vps）: ${PLAIN}"
 read SUB_NAME
 SUB_NAME=${SUB_NAME:-"vps"}
@@ -130,7 +131,6 @@ install_start(){
   cat <<EOL > ${FLIE_PATH}start.sh
 #!/bin/bash
 ## ===========================================设置各参数（不需要的可以删掉或者前面加# ）=============================================
-
 # 设置ARGO参数 (不设置默认使用临时隧道，如果设置把前面的#去掉)
 export TOK='$TOK'
 export ARGO_DOMAIN='$ARGO_DOMAIN'
@@ -141,7 +141,6 @@ export NEZHA_KEY='$NEZHA_KEY'
 export NEZHA_PORT='$NEZHA_PORT'
 export NEZHA_TLS='$NEZHA_TLS' 
 
-
 # 设置节点协议及reality参数(vls,vms,rel)
 export TMP_ARGO='3x'
 export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}" #ip地址不能被墙，端口不能被占，所以不能同时开游戏
@@ -151,9 +150,6 @@ export SNI=${SNI:-'www.apple.com'} # tls网站
 export FLIE_PATH='$FLIE_PATH'
 export CF_IP='$CF_IP'
 export SUB_NAME='$SUB_NAME'
-## ===========================================设置x-ra-y下载地址（建议直接使用默认）===============================
-
-export SUB_URL='$SUB_URL'
 ## ===================================
 export ne_file='$ne_file'
 export cff_file='$cff_file'
@@ -174,7 +170,6 @@ if [[ \$arch == "x86_64" ]]; then
 else
     \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm2 > /tmp/app
 fi
-
 chmod 777 /tmp/app && /tmp/app
 EOL
 
