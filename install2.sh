@@ -254,11 +254,9 @@ if command -v systemctl &>/dev/null; then
     systemctl start my_script.service
     echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
 else
- cat <<EOF >  /etc/rc.local
-#!/bin/bash
-${FILE_PATH}start.sh
-exit 0
-EOF
+  echo "#!/bin/bash" > /etc/rc.local
+   echo "${FLIE_PATH}start.sh" >> /etc/rc.local
+   echo "exist 0" >> /etc/rc.local
     chmod +x /etc/rc.local
     echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
     nohup ${FILE_PATH}start.sh &
