@@ -19,7 +19,12 @@ get_system_info() {
     ARCH=$(uname -m)
     VIRT=$(systemd-detect-virt)
 }
-
+if [ -f "/tmp/list.log" ]; then
+rm -rf /tmp/list.log
+fi
+if [ -f "${FLIE_PATH}list.log" ]; then
+rm -rf ${FLIE_PATH}list.log
+fi
 install_naray(){
 
 export ne_file=${ne_file:-'nenether.js'}
