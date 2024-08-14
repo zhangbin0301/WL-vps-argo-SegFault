@@ -41,12 +41,12 @@ fi
 
 install_config(){
 
-echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel,注意IP被墙不要选rel):${PLAIN}"
+echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys,默认hys):${PLAIN}"
 read TMP_ARGO
-export TMP_ARGO=${TMP_ARGO:-'rel'}  
+export TMP_ARGO=${TMP_ARGO:-'hys'}  
 
 # 提示用户输入变量值，如果没有输入则使用默认值
-if [ "${TMP_ARGO}" == "rel" ]; then 
+if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
 echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
 read SERVER_PORT
 SERVER_POT=${SERVER_PORT:-"443"}
@@ -69,7 +69,7 @@ NEZHA_PORT=${NEZHA_PORT:-"443"}
 echo -e -n "${GREEN}是否开启哪吒的tls（1开启,0关闭,默认开启）: ${PLAIN}"
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
-if [ "${TMP_ARGO}" != "rel" ]; then
+if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
 # 设置固定隧道参数
 echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
 read TOK
@@ -77,9 +77,8 @@ echo -e -n "${GREEN}请输入隧道域名(设置固定隧道需要，临时隧�
 read ARGO_DOMAIN
 echo -e -n "${GREEN}请输入CF优选IP(默认ip.sb) : ${PLAIN}"
 read CF_IP
-CF_IP=${CF_IP:-"ip.sb"}
 fi
-
+CF_IP=${CF_IP:-"ip.sb"}
 }
 
 install_config2(){
@@ -92,12 +91,12 @@ do
         kill "$pid" &>/dev/null
     fi
 done
-echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,默认rel):${PLAIN}"
+echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys默认hys):${PLAIN}"
 read TMP_ARGO
-export TMP_ARGO=${TMP_ARGO:-'rel'}
+export TMP_ARGO=${TMP_ARGO:-'hys'}
 
 
-if [ "${TMP_ARGO}" == "rel" ]; then 
+if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
 echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
 read SERVER_PORT
 SERVER_POT=${SERVER_PORT:-"443"}
@@ -121,7 +120,7 @@ NEZHA_PORT=${NEZHA_PORT:-"443"}
 echo -e -n "${GREEN}是否开启哪吒的tls（默认开启,需要关闭设置0）: ${PLAIN}"
 read NEZHA_TLS
 NEZHA_TLS=${NEZHA_TLS:-"1"}
-if [ "${TMP_ARGO}" != "rel" ]; then
+if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
 # 设置固定隧道参数
 echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
 read TOK
