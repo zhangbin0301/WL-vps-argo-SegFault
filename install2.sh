@@ -9,107 +9,103 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 PLAIN='\033[0m'
 
-echo -e "${CYAN}vps一键脚本隧道版${PLAIN}"
+echo -e "${CYAN}=======vps一键脚本隧道版============${PLAIN}"
 echo "                      "
 echo "                      "
 
 # 获取系统信息
 get_system_info() {
-    . /etc/os-release
+    source /etc/os-release
     ARCH=$(uname -m)
     VIRT=$(systemd-detect-virt)
-}
-
-install_package() {
-    if command -v apt-get &> /dev/null; then
-        apt-get update && apt-get install -y "$1"
-    elif command -v yum &> /dev/null; then
-        yum install -y "$1"
-    elif command -v apk &> /dev/null; then
-        apk add "$1"
-    else
-        echo "未知的包管理器"
-        return 1
-    fi
 }
 
 install_naray(){
     export ne_file=${ne_file:-'nenether.js'}
     export cff_file=${cff_file:-'cfnfph.js'}
     export web_file=${web_file:-'webssp.js'}
-    
     # 设置其他参数
     if [[ $PWD == */ ]]; then
       FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
     else
       FLIE_PATH="${FLIE_PATH:-${PWD}/worlds/}"
     fi
-    
     if [ ! -d "${FLIE_PATH}" ]; then
-      if mkdir -p -m 755 "${FLIE_PATH}"; then
-        echo ""
-      else 
-        echo -e "${RED}权限不足，无法创建文件${PLAIN}"
-      fi
+      mkdir -p -m 755 "${FLIE_PATH}" 2>/dev/null
     fi
-    
-    if [ -f "/tmp/list.log" ]; then
-      rm -rf /tmp/list.log
-    fi
-    
-    if [ -f "${FLIE_PATH}list.log" ]; then
-      rm -rf ${FLIE_PATH}list.log
-    fi
+    rm -f /tmp/list.log 2>/dev/null
+    rm -f ${FLIE_PATH}list.log 2>/dev/null
 
-    install_config
-    install_start
-}
+    # 函数：检查并安装依赖软件
+    check_and_install_dependencies() {
+        # 依赖软件列表
+        dependencies=("curl" "wget" "pgrep" "systemctl" "libcurl4")
 
-install_config(){
-    echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys,默认vls):${PLAIN}"
-    read TMP_ARGO
-    export TMP_ARGO=${TMP_ARGO:-'vls'}  
+        # 检查并安装依赖软件
+        for dep in "${dependencies[@]}"; do
+            if ! command -v "$dep" &>/dev/null; then
+                case "$linux_dist" in
+                    "Alpine Linux")
+                        apk update >/dev/null 2>&1
+                        apk add "$dep" >/dev/null 2>&1
+                        ;;
+                    "Ubuntu" | "Debian" | "Kali Linux")
+                        apt-get update >/dev/null 2>&1
+                        apt-get install -y "$dep" >/dev/null 2>&1
+                        ;;
+                    "CentOS")
+                        yum install -y "$dep" >/dev/null 2>&1
+                        ;;
+                esac
+            fi
+        done
+    }
 
-    if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
-        echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
-        read SERVER_PORT
-        SERVER_POT=${SERVER_PORT:-"443"}
-    fi
+    install_config(){
+        echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys,默认vls):${PLAIN}"
+        read TMP_ARGO
+        export TMP_ARGO=${TMP_ARGO:-'vls'}  
 
-    echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
-    read SUB_URL
+        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
+            echo -e -n "${GREEN}请输入节点端口(默认443，注意nat鸡端口不要超过范围):${PLAIN}"
+            read SERVER_PORT
+            SERVER_POT=${SERVER_PORT:-"443"}
+        fi
 
-    echo -e -n "${GREEN}请输入节点名称（默认值：vps）: ${PLAIN}"
-    read SUB_NAME
-    SUB_NAME=${SUB_NAME:-"vps"}
+        echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
+        read SUB_URL
 
-    echo -e -n "${GREEN}请输入 NEZHA_SERVER（不需要就不填）: ${PLAIN}"
-    read NEZHA_SERVER
+        echo -e -n "${GREEN}请输入节点名称（默认值：vps）: ${PLAIN}"
+        read SUB_NAME
+        SUB_NAME=${SUB_NAME:-"vps"}
 
-    echo -e -n "${GREEN}请输入 NEZHA_KEY (不需要就不填): ${PLAIN}"
-    read NEZHA_KEY
+        echo -e -n "${GREEN}请输入 NEZHA_SERVER（不需要就不填）: ${PLAIN}"
+        read NEZHA_SERVER
 
-    echo -e -n "${GREEN}请输入 NEZHA_PORT（默认值：443）: ${PLAIN}"
-    read NEZHA_PORT
-    NEZHA_PORT=${NEZHA_PORT:-"443"}
+        echo -e -n "${GREEN}请输入 NEZHA_KEY (不需要就不填): ${PLAIN}"
+        read NEZHA_KEY
 
-    echo -e -n "${GREEN}是否开启哪吒的tls（1开启,0关闭,默认开启）: ${PLAIN}"
-    read NEZHA_TLS
-    NEZHA_TLS=${NEZHA_TLS:-"1"}
+        echo -e -n "${GREEN}请输入 NEZHA_PORT（默认值：443）: ${PLAIN}"
+        read NEZHA_PORT
+        NEZHA_PORT=${NEZHA_PORT:-"443"}
 
-    if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
-        echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
-        read TOK
-        echo -e -n "${GREEN}请输入隧道域名(设置固定隧道需要，临时隧道不需要) : ${PLAIN}"
-        read ARGO_DOMAIN
-        echo -e -n "${GREEN}请输入CF优选IP(默认ip.sb) : ${PLAIN}"
-        read CF_IP
-    fi
-    CF_IP=${CF_IP:-"ip.sb"}
-}
+        echo -e -n "${GREEN}是否开启哪吒的tls（1开启,0关闭,默认开启）: ${PLAIN}"
+        read NEZHA_TLS
+        NEZHA_TLS=${NEZHA_TLS:-"1"}
 
-install_start(){
-    cat <<EOL > ${FLIE_PATH}start.sh
+        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
+            echo -e -n "${GREEN}请输入固定隧道token或者json(不填则使用临时隧道) : ${PLAIN}"
+            read TOK
+            echo -e -n "${GREEN}请输入隧道域名(设置固定隧道需要，临时隧道不需要) : ${PLAIN}"
+            read ARGO_DOMAIN
+            echo -e -n "${GREEN}请输入CF优选IP(默认ip.sb) : ${PLAIN}"
+            read CF_IP
+        fi
+        CF_IP=${CF_IP:-"ip.sb"}
+    }
+
+    install_start(){
+        cat <<EOL > ${FLIE_PATH}start.sh
 #!/bin/bash
 export TOK='$TOK'
 export ARGO_DOMAIN='$ARGO_DOMAIN'
@@ -117,17 +113,17 @@ export NEZHA_SERVER='$NEZHA_SERVER'
 export NEZHA_KEY='$NEZHA_KEY'
 export NEZHA_PORT='$NEZHA_PORT'
 export NEZHA_TLS='$NEZHA_TLS' 
-export TMP_ARGO='$TMP_ARGO'
-export SERVER_PORT='$SERVER_PORT'
-export SNI='www.apple.com'
+export TMP_ARGO=${TMP_ARGO:-'vls'}
+export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}"
+export SNI=${SNI:-'www.apple.com'}
 export FLIE_PATH='$FLIE_PATH'
 export CF_IP='$CF_IP'
 export SUB_NAME='$SUB_NAME'
+export SERVER_IP='$SERVER_IP'
 export SUB_URL='$SUB_URL'
 export ne_file='$ne_file'
 export cff_file='$cff_file'
 export web_file='$web_file'
-
 if command -v curl &>/dev/null; then
     DOWNLOAD_CMD="curl -sL"
 elif command -v wget &>/dev/null; then
@@ -137,7 +133,6 @@ else
     sleep 30
     exit 1
 fi
-
 arch=\$(uname -m)
 if [[ \$arch == "x86_64" ]]; then
     \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd > /tmp/app
@@ -148,35 +143,43 @@ fi
 chmod 777 /tmp/app && /tmp/app
 EOL
 
-    chmod +x ${FLIE_PATH}start.sh
-}
+        chmod +x ${FLIE_PATH}start.sh
+    }
 
-check_and_install_dependencies() {
-    dependencies=("curl" "pgrep" "wget" "systemctl" "libcurl4")
-    for dep in "${dependencies[@]}"; do
-        if ! command -v "$dep" &>/dev/null; then
-            echo -e "${YELLOW}$dep 命令未安装，将尝试安装...${PLAIN}"
-            install_package "$dep"
-            echo -e "${GREEN}$dep 命令已安装。${PLAIN}"
+    # 函数：配置开机启动
+    configure_startup() {
+        check_and_install_dependencies
+        if [ -s "${FLIE_PATH}start.sh" ]; then
+            rm_naray
         fi
-    done
-    echo -e "${GREEN}所有依赖已经安装${PLAIN}"
-    return 0
+        install_config
+        install_start
+
+        cat <<EOL > /etc/init.d/my_startup_script
+#!/sbin/openrc-run
+
+name="\$RC_SVCNAME"
+command="${FLIE_PATH}start.sh"
+command_background=true
+pidfile="/run/\$RC_SVCNAME.pid"
+
+depend() {
+    need net
 }
+EOL
 
-configure_startup() {
-    check_and_install_dependencies
-    if [ -s "${FLIE_PATH}start.sh" ]; then
-        rm_naray
-    fi
-    install_config
-    install_start
+        chmod +x /etc/init.d/my_startup_script
 
-    if command -v systemctl &> /dev/null; then
-        # 使用 systemd
-        cat <<EOL > /etc/systemd/system/my_script.service
+        case "$linux_dist" in
+            "Alpine Linux")
+                rc-update add my_startup_script default 2>/dev/null
+                rc-service my_startup_script start 2>/dev/null
+                ;;
+            "Ubuntu" | "Debian" | "CentOS")
+                cat <<EOL > /etc/systemd/system/my_startup_script.service
 [Unit]
 Description=My Startup Script
+After=network.target
 
 [Service]
 ExecStart=${FLIE_PATH}start.sh
@@ -186,98 +189,115 @@ User=$(whoami)
 [Install]
 WantedBy=multi-user.target
 EOL
-        systemctl enable my_script.service
-        systemctl start my_script.service
-    else
-        # 使用 rc.local
-        echo "${FLIE_PATH}start.sh" >> /etc/rc.local
-        chmod +x /etc/rc.local
-        nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
-    fi
+                systemctl enable my_startup_script.service 2>/dev/null
+                systemctl start my_startup_script.service 2>/dev/null
+                ;;
+            *)
+                if [ ! -f /etc/rc.local ]; then
+                    echo '#!/bin/sh -e' > /etc/rc.local
+                    echo 'exit 0' >> /etc/rc.local
+                    chmod +x /etc/rc.local
+                fi
+                sed -i '/exit 0/i '"${FLIE_PATH}"'start.sh &' /etc/rc.local
+                ;;
+        esac
 
-    echo -e "${YELLOW}等待脚本启动...${PLAIN}"
-    sleep 15
-    check_process_and_log
-}
+        echo -e "${YELLOW}等待脚本启动...${PLAIN}"
+        sleep 15
+        keyword="$web_file"
+        max_attempts=5
+        counter=0
 
-check_process() {
-    if command -v pgrep > /dev/null; then
-        pgrep -f "$1" > /dev/null
-    else
-        ps aux | grep "$1" | grep -v grep > /dev/null
-    fi
-}
-
-check_process_and_log() {
-    keyword="$web_file"
-    max_attempts=5
-    counter=0
-
-    while [ $counter -lt $max_attempts ]; do
-        if check_process "$keyword" && [ -s /tmp/list.log ]; then
-            echo -e "${CYAN}***************************************************${PLAIN}"
-            echo "                          "
-            echo -e "${GREEN}       脚本启动成功${PLAIN}"
-            echo "                          "
+        while [ $counter -lt $max_attempts ]; do
+          if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
+            echo -e "${GREEN}脚本启动成功${PLAIN}"
             break
-        else
+          elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
+            echo -e "${GREEN}脚本启动成功${PLAIN}"
+            break
+          else
             sleep 10
             ((counter++))
+          fi
+        done
+
+        echo -e "${CYAN}************节点信息****************${PLAIN}"
+        if [ -s "${FLIE_PATH}list.log" ]; then
+          sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
+        else
+          if [ -s "/tmp/list.log" ]; then
+            sed 's/{PASS}/vless/g' /tmp/list.log | cat
+          fi
         fi
-    done
+        echo -e "${CYAN}***************************************************${PLAIN}"
+    }
 
-    echo "                         "
-    echo -e "${CYAN}************节点信息****************${PLAIN}"
-    echo "                         "
-    if [ -s "${FLIE_PATH}list.log" ]; then
-        sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
-    elif [ -s "/tmp/list.log" ]; then
-        sed 's/{PASS}/vless/g' /tmp/list.log | cat
-    fi
-    echo "                         "
-    echo -e "${CYAN}***************************************************${PLAIN}"
-}
+    start_menu2(){
+        echo -e "${CYAN}>>>>>>>>请选择操作：${PLAIN}"
+        echo -e "${GREEN}1. 开机启动(需要root)${PLAIN}"
+        echo -e "${GREEN}2. 临时启动(无需root)${PLAIN}"
+        echo -e "${GREEN}0. 退出${PLAIN}"
+        read choice
 
-start_menu2(){
-    echo -e "${CYAN}>>>>>>>>请选择操作：${PLAIN}"
-    echo "       "
-    echo -e "${GREEN}       1. 开机启动(需要root)${PLAIN}"
-    echo "       "
-    echo -e "${GREEN}       2. 临时启动(无需root)${PLAIN}"
-    echo "       "
-    echo -e "${GREEN}       0. 退出${PLAIN}"
-    read choice
+        case $choice in
+            2)
+                echo -e "${YELLOW}临时启动...${PLAIN}"
+                install_config
+                install_start
+                nohup ${FLIE_PATH}start.sh >/dev/null 2>&1 &
+                echo -e "${YELLOW}等待脚本启动...${PLAIN}"
+                sleep 15
+                keyword="$web_file"
+                max_attempts=5
+                counter=0
 
-    case $choice in
-        2)
-            echo -e "${YELLOW}临时启动...${PLAIN}"
-            install_config
-            install_start
-            nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
-            check_process_and_log
-            ;;
-        1)
-            echo -e "${YELLOW}      添加到开机启动...${PLAIN}"
-            configure_startup
-            echo -e "${GREEN}      已添加到开机启动${PLAIN}"
-            ;;
-        0)
-            exit 1
-            ;;
-        *)
-            clear
-            echo -e "${RED}错误:请输入正确数字 [0-2]${PLAIN}"
-            sleep 5s
-            start_menu2
-            ;;
-    esac
+                while [ $counter -lt $max_attempts ]; do
+                  if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
+                    echo -e "${GREEN}脚本启动成功${PLAIN}"
+                    break
+                  elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
+                    echo -e "${GREEN}脚本启动成功${PLAIN}"
+                    break
+                  else
+                    sleep 10
+                    ((counter++))
+                  fi
+                done
+
+                echo -e "${CYAN}************节点信息******************${PLAIN}"
+                if [ -s "${FLIE_PATH}list.log" ]; then
+                  sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
+                else
+                  if [ -s "/tmp/list.log" ]; then
+                    sed 's/{PASS}/vless/g' /tmp/list.log | cat
+                  fi
+                fi
+                echo -e "${CYAN}***************************************************${PLAIN}"
+                ;;
+            1)
+                echo -e "${YELLOW}添加到开机启动...${PLAIN}"
+                configure_startup
+                echo -e "${GREEN}已添加到开机启动${PLAIN}"
+                ;;
+            0)
+                exit 0
+                ;;
+            *)
+                clear
+                echo -e "${RED}错误:请输入正确数字 [0-2]${PLAIN}"
+                sleep 5s
+                start_menu2
+                ;;
+        esac
+    }
+    start_menu2
 }
 
 install_bbr(){
     if command -v curl &>/dev/null; then
         bash <(curl -sL https://git.io/kernel.sh)
     elif command -v wget &>/dev/null; then
-        bash <(wget -qO- https://git.io/kernel.sh)
+       bash <(wget -qO- https://git.io/kernel.sh)
     else
         echo -e "${RED}错误: 未找到 curl 或 wget。请安装其中之一。${PLAIN}"
         sleep 30
@@ -285,38 +305,21 @@ install_bbr(){
 }
 
 rm_naray(){
-    service_name="my_script.service"
-    if command -v systemctl &> /dev/null; then
-        if systemctl is-active --quiet $service_name; then
-            echo -e "${YELLOW}服务 $service_name 仍处于活动状态。正在停止...${PLAIN}"
-            systemctl stop $service_name
-            echo -e "${GREEN}服务已停止。${PLAIN}"
-        fi
-        if systemctl is-enabled --quiet $service_name; then
-            echo -e "${YELLOW}正在禁用 $service_name...${PLAIN}"
-            systemctl disable $service_name
-            echo -e "${GREEN}服务 $service_name 已禁用。${PLAIN}"
-        fi
-        if [ -f "/etc/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}正在删除服务文件 /etc/systemd/system/$service_name...${PLAIN}"
-            rm "/etc/systemd/system/$service_name"
-            echo -e "${GREEN}服务文件已删除。${PLAIN}"
-        elif [ -f "/lib/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}正在删除服务文件 /lib/systemd/system/$service_name...${PLAIN}"
-            rm "/lib/systemd/system/$service_name"
-            echo -e "${GREEN}服务文件已删除。${PLAIN}"
-        fi
-        echo -e "${YELLOW}正在重新加载 systemd...${PLAIN}"
-        systemctl daemon-reload
-        echo -e "${GREEN}Systemd 已重新加载。${PLAIN}"
-    else
-        sed -i '\|${FLIE_PATH}start.sh|d' /etc/rc.local
+    service_name="my_startup_script.service"
+    if [ "$(systemctl is-active $service_name 2>/dev/null)" == "active" ]; then
+        systemctl stop $service_name 2>/dev/null
     fi
+    if [ "$(systemctl is-enabled $service_name 2>/dev/null)" == "enabled" ]; then
+        systemctl disable $service_name 2>/dev/null
+    fi
+    rm -f "/etc/systemd/system/$service_name" 2>/dev/null
+    rm -f "/lib/systemd/system/$service_name" 2>/dev/null
+    systemctl daemon-reload 2>/dev/null
 
     processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
     for process in "${processes[@]}"
     do
-        pkill -f "$process"
+        pkill -f "$process" 2>/dev/null
     done
 }
 
