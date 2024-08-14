@@ -19,12 +19,7 @@ get_system_info() {
     ARCH=$(uname -m)
     VIRT=$(systemd-detect-virt)
 }
-if [ -f "/tmp/list.log" ]; then
-rm -rf /tmp/list.log
-fi
-if [ -f "${FLIE_PATH}list.log" ]; then
-rm -rf ${FLIE_PATH}list.log
-fi
+
 install_naray(){
 
 export ne_file=${ne_file:-'nenether.js'}
@@ -43,7 +38,12 @@ if [ ! -d "${FLIE_PATH}" ]; then
     echo -e "${RED}权限不足，无法创建文件${PLAIN}"
   fi
 fi
-
+if [ -f "/tmp/list.log" ]; then
+rm -rf /tmp/list.log
+fi
+if [ -f "${FLIE_PATH}list.log" ]; then
+rm -rf ${FLIE_PATH}list.log
+fi
 install_config(){
 
 echo -e -n "${GREEN}请输入节点使用的协议，(可选vls,vms,rel,hys,默认vls):${PLAIN}"
