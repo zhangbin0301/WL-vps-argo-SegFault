@@ -201,11 +201,11 @@ EOL
             if ! command -v "$dep" &>/dev/null; then
                 echo -e "${YELLOW}$dep command not installed, attempting to install...${PLAIN}"
                 if command -v apt-get &>/dev/null; then
-                    sudo apt-get update && sudo apt-get install -y "$dep"
+                     apt-get update &&  apt-get install -y "$dep"
                 elif command -v yum &>/dev/null; then
-                    sudo yum install -y "$dep"
+                     yum install -y "$dep"
                 elif command -v apk &>/dev/null; then
-                    sudo apk add --no-cache "$dep"
+                     apk add --no-cache "$dep"
                 else
                     echo -e "${RED}Unable to install $dep. Please install it manually.${PLAIN}"
                     echo -e "${YELLOW}Continuing with the script...${PLAIN}"
@@ -248,15 +248,16 @@ EOL
 
         # Move service file to system directory and enable
         if command -v systemctl &>/dev/null; then
-            sudo mv /tmp/my_script.service /etc/systemd/system/
-            sudo systemctl daemon-reload
-            sudo systemctl enable my_script.service
-            sudo systemctl start my_script.service
+             mv /tmp/my_script.service /etc/systemd/system/
+             systemctl daemon-reload
+             systemctl enable my_script.service
+             systemctl start my_script.service
             echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
         else
-            echo "${FLIE_PATH}start.sh" | sudo tee -a /etc/rc.local > /dev/null
-            sudo chmod +x /etc/rc.local
-            echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
+            echo "${FLIE_PATH}start.sh" |  tee -a /etc/rc.local > /dev/null
+             chmod +x /etc/rc.local
+             echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
+             nohup ${FLIE_PATH}start.sh &
         fi
 
         echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
@@ -413,25 +414,25 @@ rm_naray(){
         # Check if the service is active
         if systemctl is-active --quiet $service_name; then
             echo -e "${YELLOW}Service $service_name is still active. Stopping...${PLAIN}"
-            sudo systemctl stop $service_name
+             systemctl stop $service_name
             echo -e "${GREEN}Service has been stopped.${PLAIN}"
         fi
 
         # Check if the service is enabled
         if systemctl is-enabled --quiet $service_name; then
             echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-            sudo systemctl disable $service_name
+             systemctl disable $service_name
             echo -e "${GREEN}Service $service_name has been disabled.${PLAIN}"
         fi
 
         # Remove the service file
         if [ -f "/etc/systemd/system/$service_name" ]; then
             echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
-            sudo rm "/etc/systemd/system/$service_name"
+             rm "/etc/systemd/system/$service_name"
             echo -e "${GREEN}Service file has been removed.${PLAIN}"
         elif [ -f "/lib/systemd/system/$service_name" ]; then
             echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
-            sudo rm "/lib/systemd/system/$service_name"
+             rm "/lib/systemd/system/$service_name"
             echo -e "${GREEN}Service file has been removed.${PLAIN}"
         else
             echo -e "${YELLOW}Service file not found in /etc/systemd/system/ or /lib/systemd/system/.${PLAIN}"
@@ -439,13 +440,13 @@ rm_naray(){
 
         # Reload systemd
         echo -e "${YELLOW}Reloading systemd...${PLAIN}"
-        sudo systemctl daemon-reload
+         systemctl daemon-reload
         echo -e "${GREEN}Systemd has been reloaded.${PLAIN}"
     else
         # If systemd is not available, remove from rc.local
         if grep -q "${FLIE_PATH}start.sh" /etc/rc.local; then
             echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
-            sudo sed -i "\#${FLIE_PATH}start.sh#d" /etc/rc.local
+             sed -i "\#${FLIE_PATH}start.sh#d" /etc/rc.local
             echo -e "${GREEN}Startup entry has been removed from /etc/rc.local.${PLAIN}"
         else
             echo -e "${YELLOW}Startup entry not found in /etc/rc.local.${PLAIN}"
@@ -506,11 +507,3 @@ get_system_info
 
 # Start the main menu
 start_menu1
-
-# Execute the script immediately after installation
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Installation completed. Starting the script...${PLAIN}"
-    ${FLIE_PATH}start.sh
-else
-    echo -e "${RED}Installation failed. Please check the error messages above.${PLAIN}"
-fi
