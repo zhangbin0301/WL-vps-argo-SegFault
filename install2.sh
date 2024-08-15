@@ -254,44 +254,11 @@ if command -v systemctl &>/dev/null; then
     systemctl start my_script.service
     echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
 else
-SCRIPT_PATH="${FLIE_PATH}start.sh"
-if [ -x "$(command -v openrc)" ]; then
-    echo "OpenRC detected. Configuring startup script..."
-
-    # 创建 OpenRC 服务脚本
-    cat <<EOF > /etc/init.d/my_start_script
-#!/sbin/openrc-run
-
-description="My Custom Startup Script"
-
-start() {
-    ebegin "Starting my custom startup script"
-    $SCRIPT_PATH
-    eend \$?
-}
-EOF
-    chmod +x /etc/init.d/my_start_script
-    rc-update add my_start_script default
-
-    echo "Startup script configured via OpenRC."
-
-elif grep -q "alpine" /etc/os-release; then
-    echo "Alpine Linux detected. Configuring /etc/inittab for startup script..."
-
-    # 添加启动脚本到 /etc/inittab
-    if ! grep -q "$SCRIPT_PATH" /etc/inittab; then
-        echo "::sysinit:$SCRIPT_PATH" >> /etc/inittab
-        echo "Startup script added to /etc/inittab."
-    else
-        echo "Startup script already exists in /etc/inittab."
-    fi
-
-else
-    echo "Unsupported environment. Please configure manually."
-fi
-chmod +x $SCRIPT_PATH
-echo "Setup complete. Reboot your system to test the startup script."
-
+   echo "#!/bin/bash" > /etc/rc.local
+   echo "${FLIE_PATH}start.sh &" >> /etc/rc.local
+   echo "exit 0" >> /etc/rc.local
+   chmod +x /etc/rc.local
+   echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
    nohup ${FLIE_PATH}start.sh &
 fi
 
