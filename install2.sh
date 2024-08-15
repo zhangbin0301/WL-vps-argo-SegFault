@@ -271,9 +271,10 @@ start() {
 EOF
     chmod +x /etc/init.d/my_start_script
     rc-update add my_start_script default
-
     echo "Startup script configured via OpenRC."
-
+    chmod +x $SCRIPT_PATH
+    echo "Setup complete. Reboot your system to test the startup script."
+    nohup ${FLIE_PATH}start.sh &
 elif [ -f "/etc/init.d/functions" ]; then
     echo "SysV init detected. Configuring SysV init script..."
 
@@ -307,9 +308,10 @@ EOF
 
     chmod +x /etc/init.d/my_start_script
     update-rc.d my_start_script defaults
-
     echo "Startup script configured via SysV init."
-
+    chmod +x $SCRIPT_PATH
+    echo "Setup complete. Reboot your system to test the startup script."
+    nohup ${FLIE_PATH}start.sh &
 elif [ -d "/etc/supervisor/conf.d" ]; then
     echo "Supervisor detected. Configuring supervisor..."
 
@@ -336,7 +338,9 @@ elif grep -q "alpine" /etc/os-release; then
     else
         echo "Startup script already exists in /etc/inittab."
     fi
-
+    chmod +x $SCRIPT_PATH
+    echo "Setup complete. Reboot your system to test the startup script."
+    nohup ${FLIE_PATH}start.sh &
 else
     echo "No standard init system detected. Attempting to use /etc/rc.local..."
 
@@ -353,12 +357,10 @@ else
         chmod +x /etc/rc.local
         echo "Created /etc/rc.local and added startup script."
     fi
+    chmod +x $SCRIPT_PATH
+    echo "Setup complete. Reboot your system to test the startup script."
+    nohup ${FLIE_PATH}start.sh &
 fi
-
-chmod +x $SCRIPT_PATH
-echo "Setup complete. Reboot your system to test the startup script."
-
-nohup ${FLIE_PATH}start.sh &
 
         echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
         sleep 15
@@ -506,66 +508,89 @@ reinstall_naray(){
 }
 
 rm_naray(){
-    # Service name
-    service_name="my_script.service"
+    SCRIPT_PATH="${FLIE_PATH}start.sh"
 
-    # Check if systemd is available
+    # Check for systemd
     if command -v systemctl &>/dev/null; then
-        # Check if the service is active
+        service_name="my_script.service"
         if systemctl is-active --quiet $service_name; then
-            echo -e "${YELLOW}Service $service_name is still active. Stopping...${PLAIN}"
-             systemctl stop $service_name
-            echo -e "${GREEN}Service has been stopped.${PLAIN}"
+            echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
+            systemctl stop $service_name
         fi
-
-        # Check if the service is enabled
         if systemctl is-enabled --quiet $service_name; then
             echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-             systemctl disable $service_name
-            echo -e "${GREEN}Service $service_name has been disabled.${PLAIN}"
+            systemctl disable $service_name
         fi
-
-        # Remove the service file
         if [ -f "/etc/systemd/system/$service_name" ]; then
             echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
-             rm "/etc/systemd/system/$service_name"
-            echo -e "${GREEN}Service file has been removed.${PLAIN}"
+            rm "/etc/systemd/system/$service_name"
         elif [ -f "/lib/systemd/system/$service_name" ]; then
             echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
-             rm "/lib/systemd/system/$service_name"
-            echo -e "${GREEN}Service file has been removed.${PLAIN}"
-        else
-            echo -e "${YELLOW}Service file not found in /etc/systemd/system/ or /lib/systemd/system/.${PLAIN}"
+            rm "/lib/systemd/system/$service_name"
         fi
-
-        # Reload systemd
-        echo -e "${YELLOW}Reloading systemd...${PLAIN}"
-         systemctl daemon-reload
-        echo -e "${GREEN}Systemd has been reloaded.${PLAIN}"
-    else
-        # If systemd is not available, remove from rc.local
-        if grep -q "${FLIE_PATH}start.sh" /etc/rc.local; then
-            echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
-             sed -i "\#${FLIE_PATH}start.sh#d" /etc/rc.local
-            echo -e "${GREEN}Startup entry has been removed from /etc/rc.local.${PLAIN}"
-        else
-            echo -e "${YELLOW}Startup entry not found in /etc/rc.local.${PLAIN}"
-        fi
+        systemctl daemon-reload
+        echo -e "${GREEN}Systemd service removed.${PLAIN}"
     fi
 
+    # Check for OpenRC
+    if [ -f "/etc/init.d/my_start_script" ]; then
+        echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
+        rc-update del my_start_script default
+        rm "/etc/init.d/my_start_script"
+        echo -e "${GREEN}OpenRC service removed.${PLAIN}"
+    fi
+
+    # Check for SysV init
+    if [ -f "/etc/init.d/my_start_script" ]; then
+        echo -e "${YELLOW}Removing SysV init script...${PLAIN}"
+        update-rc.d -f my_start_script remove
+        rm "/etc/init.d/my_start_script"
+        echo -e "${GREEN}SysV init script removed.${PLAIN}"
+    fi
+
+    # Check for Supervisor
+    if [ -f "/etc/supervisor/conf.d/my_start_script.conf" ]; then
+        echo -e "${YELLOW}Removing Supervisor configuration...${PLAIN}"
+        rm "/etc/supervisor/conf.d/my_start_script.conf"
+        supervisorctl reread
+        supervisorctl update
+        echo -e "${GREEN}Supervisor configuration removed.${PLAIN}"
+    fi
+
+    # Check for Alpine Linux inittab entry
+    if grep -q "$SCRIPT_PATH" /etc/inittab; then
+        echo -e "${YELLOW}Removing startup entry from /etc/inittab...${PLAIN}"
+        sed -i "\#$SCRIPT_PATH#d" /etc/inittab
+        echo -e "${GREEN}Startup entry removed from /etc/inittab.${PLAIN}"
+    fi
+
+    # Check for rc.local entry
+    if [ -f "/etc/rc.local" ] && grep -q "$SCRIPT_PATH" /etc/rc.local; then
+        echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
+        sed -i "\#$SCRIPT_PATH#d" /etc/rc.local
+        echo -e "${GREEN}Startup entry removed from /etc/rc.local.${PLAIN}"
+    fi
+
+    # Stop running processes
     processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
     for process in "${processes[@]}"
     do
         pid=$(pgrep -f "$process")
-
         if [ -n "$pid" ]; then
-            kill "$pid"  &>/dev/null
+            echo -e "${YELLOW}Stopping process $process...${PLAIN}"
+            kill "$pid" &>/dev/null
         fi
     done
 
+    # Remove script file
+    if [ -f "$SCRIPT_PATH" ]; then
+        echo -e "${YELLOW}Removing startup script $SCRIPT_PATH...${PLAIN}"
+        rm "$SCRIPT_PATH"
+        echo -e "${GREEN}Startup script removed.${PLAIN}"
+    fi
+
     echo -e "${GREEN}Uninstallation completed.${PLAIN}"
 }
-
 start_menu1(){
 clear
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
