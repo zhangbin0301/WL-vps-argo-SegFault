@@ -57,7 +57,6 @@ install_naray(){
         SERVER_POT=${SERVER_PORT:-"443"}
         fi
 
-
         echo -e -n "${GREEN}请输入节点名称 (默认: vps): ${PLAIN}"
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
@@ -256,26 +255,15 @@ elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
    cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
-name="myservice"
 command="${FLIE_PATH}start.sh"
 pidfile="${FLIE_PATH}myservice.pid"
-
+command_background=true
 start() {
-    ebegin "Starting ${name}"
-    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
+    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile
     eend \$?
 }
-
 stop() {
-    ebegin "Stopping ${name}"
     start-stop-daemon --stop --pidfile \$pidfile
-    eend \$?
-}
-
-restart() {
-    ebegin "Restarting ${name}"
-    start-stop-daemon --stop --pidfile \$pidfile
-    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
     eend \$?
 }
 EOF
