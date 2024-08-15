@@ -89,7 +89,7 @@ install_naray(){
     }
 
     install_config2(){
-        processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
+        processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js" "start.sh")
         for process in "${processes[@]}"
         do
             pid=$(pgrep -f "$process")
@@ -494,7 +494,7 @@ reinstall_naray(){
         systemctl stop my_script.service
         echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
-    processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
+    processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js" "start.sh")
     for process in "${processes[@]}"
     do
         pid=$(pgrep -f "$process")
@@ -573,7 +573,7 @@ rm_naray(){
     fi
 
     # Stop running processes
-    processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js")
+    processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js" "start.sh")
     for process in "${processes[@]}"
     do
         pid=$(pgrep -f "$process")
