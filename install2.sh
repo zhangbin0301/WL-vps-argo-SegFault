@@ -268,7 +268,7 @@ depend() {
 }
 
 start_pre() {
-    ebegin "Starting my_start_script"
+    ebegin "Starting myservice"
 }
 
 start() {
@@ -289,7 +289,7 @@ EOF
     rc-service myservice start
     echo "Startup script configured via OpenRC."
     chmod +x $SCRIPT_PATH
-    echo "Setup complete. Reboot your system to test the startup script."
+    echo "Setup complete."
 elif [ -f "/etc/init.d/functions" ]; then
     echo "SysV init detected. Configuring SysV init script..."
 
