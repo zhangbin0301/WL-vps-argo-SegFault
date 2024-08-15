@@ -256,30 +256,29 @@ EOL
 
 elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
-
 cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
 name="myservice"
 command="${FLIE_PATH}start.sh"
 command_background="yes"
-log_file="/var/log/myservice.log"  # 定义日志文件路径
+log_file="/var/log/myservice.log"
 
 start() {
     ebegin "Starting ${name}"
-    echo "\$(date '+%Y-%m-%d %H:%M:%S') - Starting ${name}" >> \$log_file
-    start-stop-daemon --start --exec \$command --background
+    echo "\$(date '+%Y-%m-%d %H:%M:%S') - Starting ${name}" >> $log_file
+    start-stop-daemon --start --exec $command --make-pidfile --pidfile /var/run/myservice.pid --background --stdout $log_file --stderr $log_file
     local ret=\$?
     eend \$ret
-    [ \$ret -eq 0 ] && echo "\$(date '+%Y-%m-%d %H:%M:%S') - Started ${name} successfully" >> \$log_file || echo "\$(date '+%Y-%m-%d %H:%M:%S') - Failed to start ${name}" >> \$log_file
+    [ \$ret -eq 0 ] && echo "\$(date '+%Y-%m-%d %H:%M:%S') - Started ${name} successfully" >> $log_file || echo "\$(date '+%Y-%m-%d %H:%M:%S') - Failed to start ${name}" >> $log_file
 }
 
 stop() {
     ebegin "Stopping ${name}"
-    echo "\$(date '+%Y-%m-%d %H:%M:%S') - Stopping ${name}" >> \$log_file
-    start-stop-daemon --stop --exec \$command
+    echo "\$(date '+%Y-%m-%d %H:%M:%S') - Stopping ${name}" >> $log_file
+    start-stop-daemon --stop --pidfile /var/run/myservice.pid
     local ret=\$?
     eend \$ret
-    [ \$ret -eq 0 ] && echo "\$(date '+%Y-%m-%d %H:%M:%S') - Stopped ${name} successfully" >> \$log_file || echo "\$(date '+%Y-%m-%d %H:%M:%S') - Failed to stop ${name}" >> \$log_file
+    [ \$ret -eq 0 ] && echo "\$(date '+%Y-%m-%d %H:%M:%S') - Stopped ${name} successfully" >> $log_file || echo "\$(date '+%Y-%m-%d %H:%M:%S') - Failed to stop ${name}" >> $log_file
 }
 EOF
 
