@@ -80,7 +80,7 @@ install_naray(){
         if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
         echo -e -n "${GREEN}请输入固定隧道TOKEN(不填，则使用临时隧道): ${PLAIN}"
         read TOK
-        echo -e -n "${GREEN}请输入固定隧道域名 (临时岁的不用填): ${PLAIN}"
+        echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
         read ARGO_DOMAIN
         echo -e -n "${GREEN}请输入cf优选IP或域名(默认 ip.sb): ${PLAIN}"
         read CF_IP
@@ -98,17 +98,17 @@ install_naray(){
                 kill "$pid" &>/dev/null
             fi
         done
-        echo -e -n "${GREEN}Please enter the protocol used by the node (options: vls, vms, rel, hys, default: vls):${PLAIN}"
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}
 
         if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
-        echo -e -n "${GREEN}Please enter the node port (default 443, note that nat chicken port should not exceed the range):${PLAIN}"
+        echo -e -n "${GREEN}请输入端口 (default 443, note that nat chicken port should not exceed the range):${PLAIN}"
         read SERVER_PORT
         SERVER_POT=${SERVER_PORT:-"443"}
         fi
 
-        echo -e -n "${GREEN}Please enter the node name (default: vps): ${PLAIN}"
+        echo -e -n "${GREEN}请输入节点名称 (default: vps): ${PLAIN}"
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
 
@@ -122,13 +122,13 @@ install_naray(){
         read NEZHA_PORT
         NEZHA_PORT=${NEZHA_PORT:-"443"}
 
-        echo -e -n "${GREEN}Enable NEZHA TLS? (default: enabled, set 0 to disable): ${PLAIN}"
+        echo -e -n "${GREEN}是否启用 NEZHA TLS? (default: enabled, set 0 to disable): ${PLAIN}"
         read NEZHA_TLS
         NEZHA_TLS=${NEZHA_TLS:-"1"}
         if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
-        echo -e -n "${GREEN}Please enter fixed tunnel token or JSON (leave blank for temporary tunnel): ${PLAIN}"
+        echo -e -n "${GREEN}请输入固定隧道token (不输入则使用临时隧道): ${PLAIN}"
         read TOK
-        echo -e -n "${GREEN}Please enter tunnel domain (required for fixed tunnel, not for temporary): ${PLAIN}"
+        echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
         read ARGO_DOMAIN
         fi
         FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
