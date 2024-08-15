@@ -9,7 +9,7 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 PLAIN='\033[0m'
 
-echo -e "${CYAN}=======VPS One-Click Script (Tunnel Version)============${PLAIN}"
+echo -e "${CYAN}=======VPS 一键脚本(Tunnel Version)============${PLAIN}"
 echo "                      "
 echo "                      "
 
@@ -47,42 +47,42 @@ install_naray(){
     fi
 
     install_config(){
-        echo -e -n "${GREEN}Please enter the protocol used by the node (options: vls, vms, rel, hys, default: vls):${PLAIN}"
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}  
 
         if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
-        echo -e -n "${GREEN}Please enter the node port (default 443, note that nat chicken port should not exceed the range):${PLAIN}"
+        echo -e -n "${GREEN}请输入节点端口 (默认443):${PLAIN}"
         read SERVER_PORT
         SERVER_POT=${SERVER_PORT:-"443"}
         fi
 
-        echo -e -n "${GREEN}Please enter the node upload address: ${PLAIN}"
+        echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
         read SUB_URL
 
-        echo -e -n "${GREEN}Please enter the node name (default: vps): ${PLAIN}"
+        echo -e -n "${GREEN}请输入节点名称 (默认: vps): ${PLAIN}"
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
 
-        echo -e -n "${GREEN}Please enter NEZHA_SERVER (leave blank if not needed): ${PLAIN}"
+        echo -e -n "${GREEN}请输入 NEZHA_SERVER (不需要，留空即可): ${PLAIN}"
         read NEZHA_SERVER
 
-        echo -e -n "${GREEN}Please enter NEZHA_KEY (leave blank if not needed): ${PLAIN}"
+        echo -e -n "${GREEN}请输入NEZHA_KEY (不需要，留空即可): ${PLAIN}"
         read NEZHA_KEY
 
-        echo -e -n "${GREEN}Please enter NEZHA_PORT (default: 443): ${PLAIN}"
+        echo -e -n "${GREEN}请输入 NEZHA_PORT (默认443): ${PLAIN}"
         read NEZHA_PORT
         NEZHA_PORT=${NEZHA_PORT:-"443"}
 
-        echo -e -n "${GREEN}Enable NEZHA TLS? (1 to enable, 0 to disable, default: 1): ${PLAIN}"
+        echo -e -n "${GREEN}是否启用哪吒tls (1 启用, 0 关闭，默认启用): ${PLAIN}"
         read NEZHA_TLS
         NEZHA_TLS=${NEZHA_TLS:-"1"}
         if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
-        echo -e -n "${GREEN}Please enter fixed tunnel token or JSON (leave blank for temporary tunnel): ${PLAIN}"
+        echo -e -n "${GREEN}请输入固定隧道TOKEN(不填，则使用临时隧道): ${PLAIN}"
         read TOK
-        echo -e -n "${GREEN}Please enter tunnel domain (required for fixed tunnel, not for temporary): ${PLAIN}"
+        echo -e -n "${GREEN}请输入固定隧道域名 (临时岁的不用填): ${PLAIN}"
         read ARGO_DOMAIN
-        echo -e -n "${GREEN}Please enter CF optimized IP (default: ip.sb): ${PLAIN}"
+        echo -e -n "${GREEN}请输入cf优选IP或域名(默认 ip.sb): ${PLAIN}"
         read CF_IP
         fi
         CF_IP=${CF_IP:-"ip.sb"}
@@ -405,11 +405,11 @@ fi
     start_menu2(){
     echo -e "${CYAN}>>>>>>>>Please select an operation:${PLAIN}"
     echo "       "
-    echo -e "${GREEN}       1. Add to startup (requires root)${PLAIN}"
+    echo -e "${GREEN}       1. 开机启动 (需要root)${PLAIN}"
     echo "       "
-    echo -e "${GREEN}       2. Temporary start (no root required)${PLAIN}"
+    echo -e "${GREEN}       2. 临时启动 (无需root)${PLAIN}"
     echo "       "
-    echo -e "${GREEN}       0. Exit${PLAIN}"
+    echo -e "${GREEN}       0. 退出${PLAIN}"
     read choice
 
     case $choice in
@@ -419,7 +419,7 @@ fi
             install_config2
             install_start
             nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
-    echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself.${PLAIN}"
+    echo -e "${YELLOW}Waiting for start... If wait time too long, you can reboot${PLAIN}"
     sleep 15
     keyword="$web_file"
     max_attempts=5
@@ -600,10 +600,10 @@ echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━�
 echo -e " ${GREEN}System Info:${PLAIN} $(uname -s) $(uname -m)"
 echo -e " ${GREEN}Virtualization:${PLAIN} $VIRT"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
-echo -e " ${GREEN}1.${PLAIN} Install ${YELLOW}X-R-A-Y${PLAIN}"
-echo -e " ${GREEN}2.${PLAIN} Install ${YELLOW}BBR Acceleration${PLAIN}"
-echo -e " ${GREEN}3.${PLAIN} Uninstall ${YELLOW}X-R-A-Y${PLAIN}"
-echo -e " ${GREEN}0.${PLAIN} Exit Script"
+echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR 加速${PLAIN}"
+echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}0.${PLAIN} 退出脚本"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 read -p " Please enter your choice [0-3]: " choice
 case "$choice" in
