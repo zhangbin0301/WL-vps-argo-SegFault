@@ -262,15 +262,7 @@ elif [ -x "$(command -v openrc)" ]; then
 #!/sbin/openrc-run
 name="myservice"
 command="${FLIE_PATH}start.sh"
-command_background="yes"
-depend() {
-    need net
-}
-
-start_pre() {
-    ebegin "Starting myservice"
-}
-
+command_background="true"
 start() {
     ebegin "Starting ${name}"
     start-stop-daemon --start --exec $command --background
@@ -547,10 +539,10 @@ rm_naray(){
     fi
 
     # Check for OpenRC
-    if [ -f "/etc/init.d/my_start_script" ]; then
+    if [ -f "/etc/init.d/myservice" ]; then
         echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
-        rc-update del my_start_script default
-        rm "/etc/init.d/my_start_script"
+        rc-update del myservice default
+        rm "/etc/init.d/myservice"
         echo -e "${GREEN}OpenRC service removed.${PLAIN}"
     fi
 
