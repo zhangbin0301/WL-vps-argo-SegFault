@@ -260,27 +260,20 @@ cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
 name="myservice"
 command="${FLIE_PATH}start.sh"
-command_background="yes"
 pidfile="/var/run/myservice.pid"
 
 start() {
-    ebegin "正在启动 \${name}"
-    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
+    ebegin "Starting \${name}"
+    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile
     eend \$?
 }
 
 stop() {
-    ebegin "正在停止 \${name}"
+    ebegin "Stopping \${name}"
     start-stop-daemon --stop --pidfile \$pidfile
     eend \$?
 }
 
-restart() {
-    ebegin "正在重启 \${name}"
-    start-stop-daemon --stop --pidfile \$pidfile
-    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
-    eend \$?
-}
 EOF
 
 chmod +x /etc/init.d/myservice
