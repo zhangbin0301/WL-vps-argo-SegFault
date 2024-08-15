@@ -57,6 +57,7 @@ install_naray(){
         SERVER_POT=${SERVER_PORT:-"443"}
         fi
 
+
         echo -e -n "${GREEN}请输入节点名称 (默认: vps): ${PLAIN}"
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
@@ -253,25 +254,36 @@ EOL
 
 elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
-
-    # 创建 OpenRC 服务脚本
-    cat <<EOF > /etc/init.d/my_start_script
+   cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
-
-description="My Custom Startup Script"
+name="myservice"
+command="${FLIE_PATH}start.sh"
+pidfile="${FLIE_PATH}myservice.pid"
 
 start() {
-    ebegin "Starting my custom startup script"
-    $SCRIPT_PATH
+    ebegin "Starting ${name}"
+    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
+    eend \$?
+}
+
+stop() {
+    ebegin "Stopping ${name}"
+    start-stop-daemon --stop --pidfile \$pidfile
+    eend \$?
+}
+
+restart() {
+    ebegin "Restarting ${name}"
+    start-stop-daemon --stop --pidfile \$pidfile
+    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
     eend \$?
 }
 EOF
-    chmod +x /etc/init.d/my_start_script
-    rc-update add my_start_script default
-    echo "Startup script configured via OpenRC."
-    chmod +x $SCRIPT_PATH
-    echo "Setup complete. Reboot your system to test the startup script."
-    nohup ${FLIE_PATH}start.sh &
+chmod +x /etc/init.d/myservice
+rc-update add myservice default
+rc-service myservice start
+nohup ${FLIE_PATH}start.sh &
+echo "Startup script configured via OpenRC."
 elif [ -f "/etc/init.d/functions" ]; then
     echo "SysV init detected. Configuring SysV init script..."
 
@@ -530,10 +542,10 @@ rm_naray(){
     fi
 
     # Check for OpenRC
-    if [ -f "/etc/init.d/my_start_script" ]; then
+    if [ -f "/etc/init.d/myservice" ]; then
         echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
-        rc-update del my_start_script default
-        rm "/etc/init.d/my_start_script"
+        rc-update del myservice default
+        rm "/etc/init.d/myservice"
         echo -e "${GREEN}OpenRC service removed.${PLAIN}"
     fi
 
