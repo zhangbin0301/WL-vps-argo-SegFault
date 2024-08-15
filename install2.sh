@@ -261,26 +261,19 @@ cat <<EOF > /etc/init.d/myservice
 name="myservice"
 command="${FLIE_PATH}start.sh"
 command_background="yes"
-log_file="/var/log/myservice.log"
+pidfile="/var/run/myservice.pid"
 
 start() {
     ebegin "Starting ${name}"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting ${name}" >> $log_file
-    start-stop-daemon --start --exec $command --make-pidfile --pidfile /var/run/myservice.pid --background --stdout $log_file --stderr $log_file
-    local ret=$?
-    eend $ret
-    [ $ret -eq 0 ] && echo "$(date '+%Y-%m-%d %H:%M:%S') - Started ${name} successfully" >> $log_file || echo "$(date '+%Y-%m-%d %H:%M:%S') - Failed to start ${name}" >> $log_file
+    start-stop-daemon --start --exec $command --make-pidfile --pidfile $pidfile --background
+    eend $?
 }
 
 stop() {
     ebegin "Stopping ${name}"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Stopping ${name}" >> $log_file
-    start-stop-daemon --stop --pidfile /var/run/myservice.pid
-    local ret=$?
-    eend $ret
-    [ $ret -eq 0 ] && echo "$(date '+%Y-%m-%d %H:%M:%S') - Stopped ${name} successfully" >> $log_file || echo "$(date '+%Y-%m-%d %H:%M:%S') - Failed to stop ${name}" >> $log_file
+    start-stop-daemon --stop --pidfile $pidfile
+    eend $?
 }
-
 EOF
 
 chmod +x /etc/init.d/myservice
