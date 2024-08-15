@@ -260,14 +260,29 @@ elif [ -x "$(command -v openrc)" ]; then
     # 创建 OpenRC 服务脚本
     cat <<EOF > /etc/init.d/my_start_script
 #!/sbin/openrc-run
+name="my_start_script"
+command="${FLIE_PATH}start.sh"
+command_background="yes"
+depend() {
+    need net
+}
 
-description="My Custom Startup Script"
+start_pre() {
+    ebegin "Starting my_start_script"
+}
 
 start() {
-    ebegin "Starting my custom startup script"
-    $SCRIPT_PATH
-    eend \$?
+    ebegin "Starting ${name}"
+    start-stop-daemon --start --background --exec $command
+    eend $?
 }
+
+stop() {
+    ebegin "Stopping ${name}"
+    start-stop-daemon --stop --exec $command
+    eend $?
+}
+
 EOF
     chmod +x /etc/init.d/my_start_script
     rc-update add my_start_script default
