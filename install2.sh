@@ -264,14 +264,21 @@ command_background="yes"
 pidfile="/var/run/myservice.pid"
 
 start() {
-    ebegin "Starting \${name}"
+    ebegin "正在启动 \${name}"
     start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
     eend \$?
 }
 
 stop() {
-    ebegin "Stopping \${name}"
+    ebegin "正在停止 \${name}"
     start-stop-daemon --stop --pidfile \$pidfile
+    eend \$?
+}
+
+restart() {
+    ebegin "正在重启 \${name}"
+    start-stop-daemon --stop --pidfile \$pidfile
+    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
     eend \$?
 }
 EOF
