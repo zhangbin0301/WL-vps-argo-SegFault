@@ -258,9 +258,9 @@ elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
 
     # 创建 OpenRC 服务脚本
-    cat <<EOF > /etc/init.d/my_start_script
+    cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
-name="my_start_script"
+name="myservice"
 command="${FLIE_PATH}start.sh"
 command_background="yes"
 depend() {
@@ -284,13 +284,12 @@ stop() {
 }
 
 EOF
-    chmod +x /etc/init.d/my_start_script
-    rc-update add my_start_script default
-    rc-service my_start_script start
+    chmod +x /etc/init.d/myservice
+    rc-update add myservice default
+    rc-service myservice start
     echo "Startup script configured via OpenRC."
     chmod +x $SCRIPT_PATH
     echo "Setup complete. Reboot your system to test the startup script."
-    nohup ${FLIE_PATH}start.sh &
 elif [ -f "/etc/init.d/functions" ]; then
     echo "SysV init detected. Configuring SysV init script..."
 
