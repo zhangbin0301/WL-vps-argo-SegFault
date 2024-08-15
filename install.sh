@@ -85,15 +85,17 @@ install_naray(){
     }
 
     install_config2(){
-        processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js" "start.sh")
-        for process in "${processes[@]}"
-        do
-            pid=$(pgrep -f "$process")
-
-            if [ -n "$pid" ]; then
-                kill "$pid" &>/dev/null
-            fi
+        processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+for process in "${processes[@]}"
+do
+    pids=$(pgrep -f "$process")
+    if [ -n "$pids" ]; then
+        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
+        for pid in $pids; do
+            kill "$pid" &>/dev/null
         done
+    fi
+done
         echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}
@@ -490,16 +492,17 @@ reinstall_naray(){
         systemctl stop my_script.service
         echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
-    processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js" "start.sh")
-    for process in "${processes[@]}"
-    do
-        pid=$(pgrep -f "$process")
-
-        if [ -n "$pid" ]; then
-            kill "$pid"  &>/dev/null
-        fi
-    done
-
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+for process in "${processes[@]}"
+do
+    pids=$(pgrep -f "$process")
+    if [ -n "$pids" ]; then
+        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
+        for pid in $pids; do
+            kill "$pid" &>/dev/null
+        done
+    fi
+done
     install_naray
 }
 
@@ -569,15 +572,17 @@ rm_naray(){
     fi
 
     # Stop running processes
-    processes=("$web_file" "$ne_file" "$cff_file" "app" "app.js" "start.sh")
-    for process in "${processes[@]}"
-    do
-        pid=$(pgrep -f "$process")
-        if [ -n "$pid" ]; then
-            echo -e "${YELLOW}Stopping process $process...${PLAIN}"
+processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+for process in "${processes[@]}"
+do
+    pids=$(pgrep -f "$process")
+    if [ -n "$pids" ]; then
+        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
+        for pid in $pids; do
             kill "$pid" &>/dev/null
-        fi
-    done
+        done
+    fi
+done
 
     # Remove script file
     if [ -f "$SCRIPT_PATH" ]; then
