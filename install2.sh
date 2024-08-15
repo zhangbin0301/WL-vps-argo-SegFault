@@ -257,30 +257,28 @@ EOL
 elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
 
-    # 创建 OpenRC 服务脚本
     cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
 name="myservice"
 command="${FLIE_PATH}start.sh"
-command_background="true"
+command_background="yes"
+
 start() {
     ebegin "Starting ${name}"
-    start-stop-daemon --start --exec $command --background
+    start-stop-daemon --start --exec \$command --background
     eend $?
 }
 
 stop() {
     ebegin "Stopping ${name}"
-    start-stop-daemon --stop --exec $command
+    start-stop-daemon --stop --exec \$command
     eend $?
 }
 EOF
-    chmod +x /etc/init.d/myservice
-    rc-update add myservice default
-    rc-service myservice start
-    echo "Startup script configured via OpenRC."
-    chmod +x $SCRIPT_PATH
-    echo "Setup complete."
+chmod +x /etc/init.d/myservice
+rc-update add myservice default
+rc-service myservice start
+echo "Startup script configured via OpenRC."
 elif [ -f "/etc/init.d/functions" ]; then
     echo "SysV init detected. Configuring SysV init script..."
 
