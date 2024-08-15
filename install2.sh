@@ -273,7 +273,7 @@ start_pre() {
 
 start() {
     ebegin "Starting ${name}"
-    start-stop-daemon --start --background --exec $command
+    start-stop-daemon --start --exec $command --background
     eend $?
 }
 
@@ -282,7 +282,6 @@ stop() {
     start-stop-daemon --stop --exec $command
     eend $?
 }
-
 EOF
     chmod +x /etc/init.d/myservice
     rc-update add myservice default
