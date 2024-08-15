@@ -595,7 +595,7 @@ rm_naray(){
 start_menu1(){
 clear
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
-echo -e "${PURPLE}VPS One-Click Script (Tunnel Version)${PLAIN}"
+echo -e "${PURPLE}VPS 一键脚本 (Tunnel Version)${PLAIN}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 echo -e " ${GREEN}System Info:${PLAIN} $(uname -s) $(uname -m)"
 echo -e " ${GREEN}Virtualization:${PLAIN} $VIRT"
