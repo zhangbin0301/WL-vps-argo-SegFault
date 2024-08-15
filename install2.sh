@@ -271,6 +271,7 @@ start() {
 EOF
     chmod +x /etc/init.d/my_start_script
     rc-update add my_start_script default
+    rc-service my_start_script start
     echo "Startup script configured via OpenRC."
     chmod +x $SCRIPT_PATH
     echo "Setup complete. Reboot your system to test the startup script."
