@@ -231,14 +231,17 @@ EOL
         fi
         install_config
         install_start
+SCRIPT_PATH="${FLIE_PATH}start.sh"
+if [ -x "$(command -v systemctl)" ]; then
+    echo "Systemd detected. Configuring systemd service..."
 
-        # Create systemd service file
-        cat <<EOL > /tmp/my_script.service
+    # Create systemd service file
+    cat <<EOL > /etc/systemd/system/my_script.service
 [Unit]
 Description=My Startup Script
 
 [Service]
-ExecStart=${FLIE_PATH}start.sh
+ExecStart=${SCRIPT_PATH}
 Restart=always
 User=$(whoami)
 
@@ -246,22 +249,116 @@ User=$(whoami)
 WantedBy=multi-user.target
 EOL
 
-        # Move service file to system directory and enable
-if command -v systemctl &>/dev/null; then
-    mv /tmp/my_script.service /etc/systemd/system/
     systemctl daemon-reload
     systemctl enable my_script.service
     systemctl start my_script.service
-    echo -e "${GREEN}Service has been added to systemd startup.${PLAIN}"
+    echo "Service has been added to systemd startup."
+
+elif [ -x "$(command -v openrc)" ]; then
+    echo "OpenRC detected. Configuring startup script..."
+
+    # 创建 OpenRC 服务脚本
+    cat <<EOF > /etc/init.d/my_start_script
+#!/sbin/openrc-run
+
+description="My Custom Startup Script"
+
+start() {
+    ebegin "Starting my custom startup script"
+    $SCRIPT_PATH
+    eend \$?
+}
+EOF
+    chmod +x /etc/init.d/my_start_script
+    rc-update add my_start_script default
+
+    echo "Startup script configured via OpenRC."
+
+elif [ -f "/etc/init.d/functions" ]; then
+    echo "SysV init detected. Configuring SysV init script..."
+
+    cat <<EOF > /etc/init.d/my_start_script
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          my_start_script
+# Required-Start:    $network $local_fs
+# Required-Stop:     $network $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: My custom startup script
+### END INIT INFO
+
+case "\$1" in
+    start)
+        echo "Starting my custom startup script"
+        $SCRIPT_PATH
+        ;;
+    stop)
+        echo "Stopping my custom startup script"
+        killall -9 $(basename $SCRIPT_PATH)
+        ;;
+    *)
+        echo "Usage: \$0 {start|stop}"
+        exit 1
+        ;;
+esac
+exit 0
+EOF
+
+    chmod +x /etc/init.d/my_start_script
+    update-rc.d my_start_script defaults
+
+    echo "Startup script configured via SysV init."
+
+elif [ -d "/etc/supervisor/conf.d" ]; then
+    echo "Supervisor detected. Configuring supervisor..."
+
+    cat <<EOF > /etc/supervisor/conf.d/my_start_script.conf
+[program:my_start_script]
+command=$SCRIPT_PATH
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/my_start_script.err.log
+stdout_logfile=/var/log/my_start_script.out.log
+EOF
+
+    supervisorctl reread
+    supervisorctl update
+
+    echo "Startup script configured via Supervisor."
+
+elif grep -q "alpine" /etc/os-release; then
+    echo "Alpine Linux detected. Configuring /etc/inittab for startup script..."
+
+    if ! grep -q "$SCRIPT_PATH" /etc/inittab; then
+        echo "::sysinit:$SCRIPT_PATH" >> /etc/inittab
+        echo "Startup script added to /etc/inittab."
+    else
+        echo "Startup script already exists in /etc/inittab."
+    fi
+
 else
-   echo "#!/bin/bash" > /etc/rc.local
-   echo "${FLIE_PATH}start.sh &" >> /etc/rc.local
-   echo "exit 0" >> /etc/rc.local
-   chmod +x /etc/rc.local
-   echo -e "${GREEN}Script has been added to rc.local for startup.${PLAIN}"
-   nohup ${FLIE_PATH}start.sh &
+    echo "No standard init system detected. Attempting to use /etc/rc.local..."
+
+    if [ -f "/etc/rc.local" ]; then
+        if ! grep -q "$SCRIPT_PATH" /etc/rc.local; then
+            sed -i -e '$i '"$SCRIPT_PATH"'\n' /etc/rc.local
+            echo "Startup script added to /etc/rc.local."
+        else
+            echo "Startup script already exists in /etc/rc.local."
+        fi
+    else
+        echo "#!/bin/sh" > /etc/rc.local
+        echo "$SCRIPT_PATH" >> /etc/rc.local
+        chmod +x /etc/rc.local
+        echo "Created /etc/rc.local and added startup script."
+    fi
 fi
 
+chmod +x $SCRIPT_PATH
+echo "Setup complete. Reboot your system to test the startup script."
+
+nohup ${FLIE_PATH}start.sh &
 
         echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
         sleep 15
