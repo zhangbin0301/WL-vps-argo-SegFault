@@ -256,29 +256,28 @@ EOL
 
 elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
+#!/bin/sh
 cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
 name="myservice"
 command="${FLIE_PATH}start.sh"
-pidfile="/var/run/myservice.pid"
 
 start() {
     ebegin "Starting \${name}"
-    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile
+    start-stop-daemon --start --exec \$command
     eend \$?
 }
 
 stop() {
     ebegin "Stopping \${name}"
-    start-stop-daemon --stop --pidfile \$pidfile
-    eend \$?
+    # No background process to stop, you might need custom logic here
+    eend 0
 }
-
 EOF
-
 chmod +x /etc/init.d/myservice
 rc-update add myservice default
 rc-service myservice start
+
 echo "Startup script configured via OpenRC."
 elif [ -f "/etc/init.d/functions" ]; then
     echo "SysV init detected. Configuring SysV init script..."
