@@ -256,11 +256,11 @@ EOL
 
 elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
-   tee /etc/init.d/myservice <<EOF
+   cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
 name="myservice"
 command="${FLIE_PATH}start.sh"
-pidfile="/var/run/myservice.pid"
+pidfile="${FLIE_PATH}myservice.pid"
 
 start() {
     ebegin "Starting ${name}"
@@ -284,7 +284,7 @@ EOF
 chmod +x /etc/init.d/myservice
 rc-update add myservice default
 rc-service myservice start
-
+nohup ${FLIE_PATH}start.sh &
 echo "Startup script configured via OpenRC."
 elif [ -f "/etc/init.d/functions" ]; then
     echo "SysV init detected. Configuring SysV init script..."
