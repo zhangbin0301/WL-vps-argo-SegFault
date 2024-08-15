@@ -51,7 +51,7 @@ install_naray(){
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}  
 
-        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
+        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ]; then
         echo -e -n "${GREEN}请输入节点端口 (默认443):${PLAIN}"
         read SERVER_PORT
         SERVER_POT=${SERVER_PORT:-"443"}
@@ -102,7 +102,7 @@ install_naray(){
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}
 
-        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hys" ]; then
+        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ]; then
         echo -e -n "${GREEN}请输入端口 (default 443, note that nat chicken port should not exceed the range):${PLAIN}"
         read SERVER_PORT
         SERVER_POT=${SERVER_PORT:-"443"}
