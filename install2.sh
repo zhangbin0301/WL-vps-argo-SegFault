@@ -558,12 +558,13 @@ rm_naray(){
     fi
 
     # Check for Alpine Linux inittab entry
+    if [ -f "/etc/inittab" ]; then
     if grep -q "$SCRIPT_PATH" /etc/inittab; then
         echo -e "${YELLOW}Removing startup entry from /etc/inittab...${PLAIN}"
         sed -i "\#$SCRIPT_PATH#d" /etc/inittab
         echo -e "${GREEN}Startup entry removed from /etc/inittab.${PLAIN}"
     fi
-
+  fi
     # Check for rc.local entry
     if [ -f "/etc/rc.local" ] && grep -q "$SCRIPT_PATH" /etc/rc.local; then
         echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
