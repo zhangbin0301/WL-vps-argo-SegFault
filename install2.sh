@@ -496,7 +496,7 @@ reinstall_naray(){
         echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, tuic 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO="${TMP_ARGO}"
-processes=("$web_file" "start.sh" "app")
+processes=("$web_file" "app")
 for process in "${processes[@]}"
 do
     pids=$(pgrep -f "$process")
