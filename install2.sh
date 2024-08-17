@@ -492,11 +492,7 @@ install_bbr(){
 }
 
 reinstall_naray()
-    export ne_file=${ne_file:-'nenether.js'}
-    export cff_file=${cff_file:-'cfnfph.js'}
-    export web_file=${web_file:-'webssp.js'}
-    
-    # Set other parameters
+
     if [[ $PWD == */ ]]; then
       FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
     else
