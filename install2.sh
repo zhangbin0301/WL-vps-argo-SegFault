@@ -500,7 +500,7 @@ reinstall_naray(){
         systemctl stop my_script.service
         echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
-    processes=("$web_file" "start.sh" "app")
+    processes=("$web_file" "app")
 for process in "${processes[@]}"
 do
     pids=$(pgrep -f "$process")
