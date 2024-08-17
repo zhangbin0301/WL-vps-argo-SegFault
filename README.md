@@ -10,7 +10,7 @@ vps纯隧道专用版
 
 支持vmess,vless,reality，hysteria2,tuic，5种协议
 ```
-curl -fsSL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
+bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 ```
 或者
 ```
@@ -25,7 +25,7 @@ wget -qO install.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/i
 
 自用版
 ```
-curl -fsSL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh -o install2.sh && chmod +x install2.sh && ./install2.sh
+bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh)
 ```
 ```
 wget -qO install.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh && chmod +x install2.sh && ./install2.sh
