@@ -496,17 +496,9 @@ reinstall_naray(){
         echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, tuic 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO="${TMP_ARGO}"
-processes=("$web_file" "app")
-for process in "${processes[@]}"
-do
-    pids=$(pgrep -f "$process")
-    if [ -n "$pids" ]; then
-        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
-        for pid in $pids; do
-            kill "$pid" &>/dev/null
-        done
-    fi
-done
+        killall -9 $web_file
+        killall -9 start.sh
+        killall -9 app
         sed -i "/export TMP_ARGO/d" ${FLIE_PATH}start.sh
         sed -i "/export VL_PORT/a export TMP_ARGO='${TMP_ARGO}'" ${FLIE_PATH}start.sh
         rm -rf "$FILE_TMP"
