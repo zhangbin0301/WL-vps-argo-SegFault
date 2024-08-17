@@ -496,11 +496,7 @@ reinstall_naray(){
         echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, tuic 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO="${TMP_ARGO}"
-    if command -v systemctl &>/dev/null && systemctl is-active my_script.service &>/dev/null; then
-        systemctl stop my_script.service
-        echo -e "${GREEN}Service has been stopped.${PLAIN}"
-    fi
-    processes=("$web_file" "app")
+processes=("$web_file" "start.sh" "app")
 for process in "${processes[@]}"
 do
     pids=$(pgrep -f "$process")
@@ -511,7 +507,6 @@ do
         done
     fi
 done
-
         sed -i "/export TMP_ARGO/d" ${FLIE_PATH}start.sh
         sed -i "/export VL_PORT/a export TMP_ARGO='${TMP_ARGO}'" ${FLIE_PATH}start.sh
         rm -rf "$FILE_TMP"
