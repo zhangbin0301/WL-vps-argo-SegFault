@@ -496,7 +496,7 @@ reinstall_naray(){
         systemctl stop my_script.service
         echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
-    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+    processes=("$web_file" "start.sh" "app")
 for process in "${processes[@]}"
 do
     pids=$(pgrep -f "$process")
@@ -507,7 +507,22 @@ do
         done
     fi
 done
-    install_naray
+        FILE_TMP="/tmp/list.log"
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, tuic 默认: vls):${PLAIN}"
+        read TMP_ARGO
+        export TMP_ARGO="${TMP_ARGO}"
+        sed -i "/export TMP_ARGO/d" ${FLIE_PATH}start.sh
+        sed -i "/export VL_PORT/a export TMP_ARGO='${TMP_ARGO}'" ${FLIE_PATH}start.sh
+        rm -rf "$FILE_TMP"
+        nohup ${FLIE_PATH}start.sh &
+        
+        while [ ! -f "$FILE_TMP" ]; do
+        echo"请稍等..."
+        sleep 5
+        done
+        echo"节点信息:"
+        cat"$FILE_TMP"
+
 }
 
 rm_naray(){
@@ -588,13 +603,6 @@ do
     fi
 done
 
-    # Remove script file
-    if [ -f "$SCRIPT_PATH" ]; then
-        echo -e "${YELLOW}Removing startup script $SCRIPT_PATH...${PLAIN}"
-        rm "$SCRIPT_PATH"
-        echo -e "${GREEN}Startup script removed.${PLAIN}"
-    fi
-
     echo -e "${GREEN}Uninstallation completed.${PLAIN}"
 }
 start_menu1(){
@@ -606,8 +614,9 @@ echo -e " ${GREEN}System Info:${PLAIN} $(uname -s) $(uname -m)"
 echo -e " ${GREEN}Virtualization:${PLAIN} $VIRT"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
-echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR和WARP${PLAIN}"
-echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}2.${PLAIN} 更改 ${YELLOW}X-R-A-Y协议${PLAIN}"
+echo -e " ${GREEN}3.${PLAIN} 安装 ${YELLOW}BBR和WARP${PLAIN}"
+echo -e " ${GREEN}4.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
 echo -e " ${GREEN}0.${PLAIN} 退出脚本"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 read -p " Please enter your choice [0-3]: " choice
@@ -616,9 +625,12 @@ case "$choice" in
     install_naray
     ;;
     2)
+    reinstall_naray
+    ;;
+   3)
     install_bbr
     ;;
-    3)
+    4)
     rm_naray
     ;;
     0)
