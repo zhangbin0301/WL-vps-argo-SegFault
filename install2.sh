@@ -491,14 +491,25 @@ install_bbr(){
     fi
 }
 
-reinstall_naray(){
+reinstall_naray()
+    export ne_file=${ne_file:-'nenether.js'}
+    export cff_file=${cff_file:-'cfnfph.js'}
+    export web_file=${web_file:-'webssp.js'}
+    
+    # Set other parameters
+    if [[ $PWD == */ ]]; then
+      FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
+    else
+      FLIE_PATH="${FLIE_PATH:-${PWD}/worlds/}"
+    fi
+    
         FILE_TMP="/tmp/list.log"
         echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, tuic 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO="${TMP_ARGO}"
-        killall -9 $web_file
-        killall -9 start.sh
-        killall -9 app
+        killall -9 $web_file &>/dev/null
+        killall -9 start.sh &>/dev/null
+        killall -9 app &>/dev/null
         sed -i "/export TMP_ARGO/d" ${FLIE_PATH}start.sh
         sed -i "/export VL_PORT/a export TMP_ARGO='${TMP_ARGO}'" ${FLIE_PATH}start.sh
         rm -rf "$FILE_TMP"
