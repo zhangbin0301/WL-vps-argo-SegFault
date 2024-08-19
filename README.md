@@ -1,14 +1,6 @@
 # vps-Argo一键xray脚本
 
-声明：本仓库仅为自用备份，不适合别人使用，非开源项目，请勿擅自使用与传播，否则责任自负。
-
-vps纯隧道专用版
-
-支持临时启动模式，适合测试用，重启后不会自动启动
-
-支持开机启动模式，适合长期稳定使用，重启后会自动启动
-
-支持vmess,vless,reality，hysteria2,tuic，5种协议
+声明：本仓库仅为自用备份，不适合别人使用，非开源项目，请勿擅自使用与传播，否则责任自负
 ```
 bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)
 ```
@@ -23,7 +15,6 @@ wget -qO install.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/i
 
 
 
-自用版
 ```
 bash <(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh)
 ```
