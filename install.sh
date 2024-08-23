@@ -51,11 +51,13 @@ install_naray(){
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}  
 
-        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ]; then
+        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入节点端口 (默认443):${PLAIN}"
         read SERVER_PORT
         SERVER_POT=${SERVER_PORT:-"443"}
         fi
+        #echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
+        # read SUB_URL
         echo -e -n "${GREEN}请输入节点名称 (默认: vps): ${PLAIN}"
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
@@ -73,7 +75,7 @@ install_naray(){
         echo -e -n "${GREEN}是否启用哪吒tls (1 启用, 0 关闭，默认启用): ${PLAIN}"
         read NEZHA_TLS
         NEZHA_TLS=${NEZHA_TLS:-"1"}
-        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
+        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入固定隧道TOKEN(不填，则使用临时隧道): ${PLAIN}"
         read TOK
         echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
@@ -100,7 +102,7 @@ done
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}
 
-        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ]; then
+        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入端口 (default 443, note that nat chicken port should not exceed the range):${PLAIN}"
         read SERVER_PORT
         SERVER_POT=${SERVER_PORT:-"443"}
@@ -123,7 +125,7 @@ done
         echo -e -n "${GREEN}是否启用 NEZHA TLS? (default: enabled, set 0 to disable): ${PLAIN}"
         read NEZHA_TLS
         NEZHA_TLS=${NEZHA_TLS:-"1"}
-        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ]; then
+        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入固定隧道token (不输入则使用临时隧道): ${PLAIN}"
         read TOK
         echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
