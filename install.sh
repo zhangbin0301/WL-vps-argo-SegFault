@@ -363,7 +363,9 @@ else
 fi
 
         echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
-        sleep 15
+        while [ ! -f "./tmp/list.log" ]; do
+        sleep 1  # 每秒检查一次文件是否存在
+        done
         keyword="$web_file"
         max_attempts=5
         counter=0
@@ -420,7 +422,10 @@ fi
             install_start
             nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
     echo -e "${YELLOW}Waiting for start... If wait time too long, you can reboot${PLAIN}"
-    sleep 15
+    echo "等待节点信息......"
+    while [ ! -f "./tmp/list.log" ]; do
+    sleep 1  # 每秒检查一次文件是否存在
+    done
     keyword="$web_file"
     max_attempts=5
     counter=0
