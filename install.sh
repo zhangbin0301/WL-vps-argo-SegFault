@@ -145,8 +145,8 @@ export VPATH='$VPATH'
 export SUB_URL='$SUB_URL'
 
 # 自定义哪吒探针下载，也可默认0.18.2之前旧版本
-export NEZ_AMD_URL=${NEZ_AMD_URL:-'https://raw.githubusercontent.com/kahunama/myfile/main/nezha/nezha-agent'}
-export NEZ_ARM_URL=${NEZ_ARM_URL:-'https://raw.githubusercontent.com/kahunama/myfile/main/nezha/nezha-agent(arm)'}
+export NEZ_AMD_URL=${NEZ_AMD_URL:-'https://raw.githubusercontent.com/zhangbin0301/myfiles/refs/heads/main/agentX86'}
+export NEZ_ARM_URL=${NEZ_ARM_URL:-'https://raw.githubusercontent.com/zhangbin0301/myfiles/refs/heads/main/agentArm'}
 
 
 if command -v curl &>/dev/null; then
