@@ -47,7 +47,7 @@ install_naray(){
     fi
 
     install_config(){
-        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel,xhttp,hy2, tuic,3x 默认: vls):${PLAIN}"
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hy2, tuic,3x 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}  
 
@@ -56,8 +56,8 @@ install_naray(){
         read SERVER_PORT
         SERVER_POT=${SERVER_PORT:-"443"}
         fi
-        #echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
-        # read SUB_URL
+        echo -e -n "${GREEN}请输入节点上传地址(没有则跳过): ${PLAIN}"
+        read SUB_URL
         echo -e -n "${GREEN}请输入节点名称 (默认: vps): ${PLAIN}"
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
@@ -253,7 +253,7 @@ EOL
     systemctl enable my_script.service
     systemctl start my_script.service
     echo "Service has been added to systemd startup."
-
+    nohup ${FLIE_PATH}start.sh &
 elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
    cat <<EOF > /etc/init.d/myservice
@@ -280,14 +280,6 @@ elif [ -f "/etc/init.d/functions" ]; then
 
     cat <<EOF > /etc/init.d/my_start_script
 #!/bin/sh
-### BEGIN INIT INFO
-# Provides:          my_start_script
-# Required-Start:    $network $local_fs
-# Required-Stop:     $network $local_fs
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: My custom startup script
-### END INIT INFO
 
 case "\$1" in
     start)
@@ -326,7 +318,7 @@ EOF
 
     supervisorctl reread
     supervisorctl update
-
+    nohup ${FLIE_PATH}start.sh &
     echo "Startup script configured via Supervisor."
 
 elif grep -q "alpine" /etc/os-release; then
@@ -423,7 +415,6 @@ fi
             install_start
             nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
     echo -e "${YELLOW}Waiting for start... If wait time too long, you can reboot${PLAIN}"
-    echo "等待节点信息......"
     while [ ! -f "./tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do
     sleep 1  # 每秒检查一次文件是否存在
     done
@@ -631,7 +622,7 @@ case "$choice" in
     *)
     clear
     echo -e "${RED}Please enter the correct number [0-3]${PLAIN}"
-    sleep 5s
+    sleep 5
     start_menu1
     ;;
 esac
