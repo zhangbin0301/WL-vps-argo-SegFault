@@ -568,7 +568,7 @@ rm_naray(){
     fi
 
     # Stop running processes
-processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+processes=("$web_file" "$ne_file" "$cff_file" "app")
 for process in "${processes[@]}"
 do
     pids=$(pgrep -f "$process")
