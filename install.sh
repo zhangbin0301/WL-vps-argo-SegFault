@@ -56,8 +56,7 @@ install_naray(){
         read SERVER_PORT
         SERVER_POT=${SERVER_PORT:-"443"}
         fi
-        echo -e -n "${GREEN}请输入节点上传地址(需搭建服务器，没有可以不填): ${PLAIN}"
-        read SUB_URL
+
         echo -e -n "${GREEN}请输入节点名称 (默认: vps): ${PLAIN}"
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
