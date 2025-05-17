@@ -222,7 +222,8 @@ EOL
         echo -e "${GREEN}Dependency check completed${PLAIN}"
     }
 
-    # Function: Configure startup
+    
+# Function: Configure startup
     configure_startup() {
         # Check and install dependencies
         check_and_install_dependencies
@@ -231,7 +232,8 @@ EOL
         fi
         install_config
         install_start
-SCRIPT_PATH="${FLIE_PATH}start.sh"
+SCRIPT_PATH="${FLIE_PATH}start.sh" # Ensure SCRIPT_PATH is defined before use in this function
+
 if [ -x "$(command -v systemctl)" ]; then
     echo "Systemd detected. Configuring systemd service..."
 
@@ -250,9 +252,21 @@ WantedBy=multi-user.target
 EOL
 
     systemctl daemon-reload
-    systemctl enable my_script.service
-    systemctl start my_script.service
-    echo "Service has been added to systemd startup."
+    # Attempt to enable and start the service with systemd
+    if systemctl enable my_script.service && systemctl start my_script.service; then
+        echo -e "${GREEN}Service has been added to systemd startup and started successfully.${PLAIN}"
+    else
+        echo -e "${YELLOW}Failed to enable or start service with systemd (this is common if systemd is not the init system or not fully operational).${PLAIN}"
+        echo -e "${YELLOW}Attempting to directly start ${SCRIPT_PATH} in the background...${PLAIN}"
+        nohup ${SCRIPT_PATH} &>/dev/null &
+        # Check if the script is running via pgrep or ps as done later in the script
+        # This is a simplified check; you might want to integrate the more complex check from start_menu2
+        if pgrep -f "${web_file}" > /dev/null || ps aux | grep "${web_file}" | grep -v grep > /dev/null; then
+            echo -e "${GREEN}Attempted direct start of ${SCRIPT_PATH}. Check logs or processes to confirm.${PLAIN}"
+        else
+            echo -e "${RED}Attempted direct start of ${SCRIPT_PATH}, but it may not be running. Please check manually.${PLAIN}"
+        fi
+    fi
 
 elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
@@ -273,8 +287,8 @@ EOF
 chmod +x /etc/init.d/myservice
 rc-update add myservice default
 rc-service myservice start
-nohup ${FLIE_PATH}start.sh &
-echo "Startup script configured via OpenRC."
+nohup ${FLIE_PATH}start.sh &>/dev/null & # Ensure nohup is used here if desired as a fallback too
+echo "Startup script configured via OpenRC and attempted background start."
 elif [ -f "/etc/init.d/functions" ]; then
     echo "SysV init detected. Configuring SysV init script..."
 
@@ -302,8 +316,9 @@ EOF
     update-rc.d my_start_script defaults
     echo "Startup script configured via SysV init."
     chmod +x $SCRIPT_PATH
-    echo "Setup complete. Reboot your system to test the startup script."
-    nohup ${FLIE_PATH}start.sh &
+    echo "Setup complete. Reboot your system to test the startup script, or starting it directly now."
+    nohup ${SCRIPT_PATH} &>/dev/null &
+
 elif [ -d "/etc/supervisor/conf.d" ]; then
     echo "Supervisor detected. Configuring supervisor..."
 
@@ -320,6 +335,7 @@ EOF
     supervisorctl update
 
     echo "Startup script configured via Supervisor."
+    # Supervisor will handle the start
 
 elif grep -q "alpine" /etc/os-release; then
     echo "Alpine Linux detected. Configuring /etc/inittab for startup script..."
@@ -331,10 +347,10 @@ elif grep -q "alpine" /etc/os-release; then
         echo "Startup script already exists in /etc/inittab."
     fi
     chmod +x $SCRIPT_PATH
-    echo "Setup complete. Reboot your system to test the startup script."
-    nohup ${FLIE_PATH}start.sh &
+    echo "Setup complete. Reboot your system to test the startup script, or starting it directly now."
+    nohup ${SCRIPT_PATH} &>/dev/null &
 else
-    echo "No standard init system detected. Attempting to use /etc/rc.local..."
+    echo "No standard init system detected or systemd failed. Attempting to use /etc/rc.local or direct start..."
 
     if [ -f "/etc/rc.local" ]; then
         if ! grep -q "$SCRIPT_PATH" /etc/rc.local; then
@@ -343,6 +359,7 @@ else
         else
             echo "Startup script already exists in /etc/rc.local."
         fi
+         chmod +x /etc/rc.local
     else
         echo "#!/bin/sh" > /etc/rc.local
         echo "$SCRIPT_PATH" >> /etc/rc.local
@@ -350,27 +367,30 @@ else
         echo "Created /etc/rc.local and added startup script."
     fi
     chmod +x $SCRIPT_PATH
-    echo "Setup complete. Reboot your system to test the startup script."
-    nohup ${FLIE_PATH}start.sh &
+    echo "Attempting direct start of ${SCRIPT_PATH} in background."
+    nohup ${SCRIPT_PATH} &>/dev/null &
 fi
 
         echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
         echo "等待节点信息......"
-        while [ ! -f "./tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do
+        # Ensure FLIE_PATH is correctly defined and accessible here
+        # The original script has list.log check relative to PWD and FLIE_PATH
+        while [ ! -f "/tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do # Adjusted to check /tmp/list.log first as per original logic
         sleep 1  # 每秒检查一次文件是否存在
         done
-        keyword="$web_file"
+        keyword="$web_file" # Ensure web_file is defined in this scope or passed
         max_attempts=5
         counter=0
 
         while [ $counter -lt $max_attempts ]; do
-          if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
+          # Ensure pgrep is available or use ps alternative
+          if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && ([ -s "/tmp/list.log" ] || [ -s "${FLIE_PATH}list.log" ]); then
             echo -e "${CYAN}***************************************************${PLAIN}"
             echo "                          "
             echo -e "${GREEN}       Script started successfully${PLAIN}"
             echo "                          "
             break
-          elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
+          elif ps aux | grep "$keyword" | grep -v grep > /dev/null && ([ -s "/tmp/list.log" ] || [ -s "${FLIE_PATH}list.log" ]); then
             echo -e "${CYAN}***************************************************${PLAIN}"
             echo "                          "
             echo -e "${GREEN}        Script started successfully${PLAIN}"
@@ -382,15 +402,19 @@ fi
           fi
         done
 
+        if [ $counter -ge $max_attempts ]; then
+            echo -e "${RED}Script may not have started successfully after $max_attempts attempts.${PLAIN}"
+        fi
+
         echo "                         "
         echo -e "${CYAN}************Node Information****************${PLAIN}"
         echo "                         "
         if [ -s "${FLIE_PATH}list.log" ]; then
           sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
-        else
-          if [ -s "/tmp/list.log" ]; then
+        elif [ -s "/tmp/list.log" ]; then # Check /tmp/list.log if FLIE_PATH/list.log is not found
             sed 's/{PASS}/vless/g' /tmp/list.log | cat
-          fi
+        else
+            echo -e "${YELLOW}Node information log not found.${PLAIN}"
         fi
         echo "                         "
         echo -e "${CYAN}***************************************************${PLAIN}"
