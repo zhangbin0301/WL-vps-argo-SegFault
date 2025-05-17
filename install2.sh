@@ -10,7 +10,7 @@ CYAN='\033[0;36m'
 PLAIN='\033[0m'
 
 # Script version
-VERSION="1.0.2" # Updated version
+VERSION="1.0.3" # Updated version
 
 # Log file
 LOG_FILE="/tmp/vps_script.log"
@@ -112,7 +112,7 @@ check_and_install_dependencies() {
         elif command -v yum &>/dev/null; then
             print_and_log "INFO" "使用yum安装依赖项"
             yum install -y "${missing_deps[@]}" >> "$LOG_FILE" 2>&1
-        elif command -v dnf &>/dev/null;
+        elif command -v dnf &>/dev/null; then # CORRECTED LINE
             print_and_log "INFO" "使用dnf安装依赖项"
             dnf install -y "${missing_deps[@]}" >> "$LOG_FILE" 2>&1
         elif command -v apk &>/dev/null; then
