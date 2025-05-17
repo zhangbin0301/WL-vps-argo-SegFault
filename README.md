@@ -10,7 +10,9 @@ bash -c "$(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/i
 ```
 bash -c "$(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)"
 ```
+```
 curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
+```
 ```
 wget -O install.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh && chmod +x install.sh && ./install.sh
 ```
@@ -25,6 +27,7 @@ bash -c "$(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/
 ```
 ```
 curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh -o install2.sh && chmod +x install2.sh && ./install2.sh
+```
 ```
 wget -O install2.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh && chmod +x install2.sh && ./install2.sh
 ```
