@@ -505,40 +505,46 @@ reinstall_naray(){
 }
 
 rm_naray(){
-# Check if systemctl is available
-if command -v systemctl &>/dev/null; then
-      service_name="my_script.service"
+
+# Check if systemctl is available and functional
+if command -v systemctl &>/dev/null && systemctl list-units --no-pager &>/dev/null; then
+    echo -e "${GREEN}Systemd is available and functional.${PLAIN}"
     
     # Stop the service if it's running
-    if systemctl is-active --quiet "$service_name"; then
+    if systemctl is-active --quiet "$service_name" 2>/dev/null; then
         echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
-        systemctl stop "$service_name"
-        # Wait for service to fully stop
-        sleep 2
+        systemctl stop "$service_name" || echo -e "${RED}Failed to stop service.${PLAIN}"
     fi
     
     # Disable the service if it's enabled
-    if systemctl is-enabled --quiet "$service_name"; then
+    if systemctl is-enabled --quiet "$service_name" 2>/dev/null; then
         echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-        systemctl disable "$service_name"
+        systemctl disable "$service_name" || echo -e "${RED}Failed to disable service.${PLAIN}"
     fi
     
-    # Remove service file
+    # Remove service file with permission check
     if [ -f "/etc/systemd/system/$service_name" ]; then
-        echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
-        rm "/etc/systemd/system/$service_name"
+        echo -e "${YELLOW}Attempting to remove service file /etc/systemd/system/$service_name...${PLAIN}"
+        if [ -w "/etc/systemd/system/$service_name" ] || [ "$(id -u)" -eq 0 ]; then
+            rm "/etc/systemd/system/$service_name" && echo -e "${GREEN}Service file removed.${PLAIN}" || echo -e "${RED}Failed to remove service file. Permission denied.${PLAIN}"
+        else
+            echo -e "${RED}Permission denied. Try running with sudo.${PLAIN}"
+        fi
     elif [ -f "/lib/systemd/system/$service_name" ]; then
-        echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
-        rm "/lib/systemd/system/$service_name"
+        echo -e "${YELLOW}Attempting to remove service file /lib/systemd/system/$service_name...${PLAIN}"
+        if [ -w "/lib/systemd/system/$service_name" ] || [ "$(id -u)" -eq 0 ]; then
+            rm "/lib/systemd/system/$service_name" && echo -e "${GREEN}Service file removed.${PLAIN}" || echo -e "${RED}Failed to remove service file. Permission denied.${PLAIN}"
+        else
+            echo -e "${RED}Permission denied. Try running with sudo.${PLAIN}"
+        fi
     fi
     
-    # Reload systemd configuration
-    systemctl daemon-reload
-      echo -e "${GREEN}Systemd service removed successfully.${PLAIN}"
-    else
-       echo -e "${YELLOW}systemctl not found. This system may not use systemd.${PLAIN}"
-    fi
-
+    # Reload systemd configuration with error handling
+    systemctl daemon-reload 2>/dev/null || echo -e "${RED}Failed to reload systemd configuration.${PLAIN}"
+    echo -e "${GREEN}Systemd service management completed.${PLAIN}"
+  else
+    echo -e "${YELLOW}Systemd is not available or not running properly.${PLAIN}"
+   fi
     # Check for OpenRC
     if [ -f "/etc/init.d/myservice" ]; then
         echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
