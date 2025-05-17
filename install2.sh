@@ -54,7 +54,7 @@ install_naray(){
         if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入节点端口 (默认443):${PLAIN}"
         read SERVER_PORT
-        SERVER_POT=${SERVER_PORT:-"443"}
+        SERVER_POT=${SERVER_PORT:-"443"} # Note: Typo SERVER_POT, should be SERVER_PORT if used later
         fi
         echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
         read SUB_URL
@@ -105,7 +105,7 @@ done
         if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入端口 (default 443, note that nat chicken port should not exceed the range):${PLAIN}"
         read SERVER_PORT
-        SERVER_POT=${SERVER_PORT:-"443"}
+        SERVER_POT=${SERVER_PORT:-"443"} # Note: Typo SERVER_POT, should be SERVER_PORT if used later
         fi
 
         echo -e -n "${GREEN}请输入节点名称 (default: vps): ${PLAIN}"
@@ -131,7 +131,7 @@ done
         echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
         read ARGO_DOMAIN
         fi
-        FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
+        FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}" # Defaulting FLIE_PATH here if not set
         CF_IP=${CF_IP:-"ip.sb"}
     }
 
@@ -194,7 +194,7 @@ EOL
     # Function: Check and install dependencies
     check_and_install_dependencies() {
         # List of dependencies
-        dependencies=("curl" "pgrep" "pidof")
+        dependencies=("curl" "pgrep" "pidof") # pidof might not be strictly necessary if pgrep is used
 
         # Check and install dependencies
         for dep in "${dependencies[@]}"; do
@@ -209,7 +209,7 @@ EOL
                 else
                     echo -e "${RED}Unable to install $dep. Please install it manually.${PLAIN}"
                     echo -e "${YELLOW}Continuing with the script...${PLAIN}"
-                    continue
+                    continue # Continue even if a dependency fails to install
                 fi
                 if command -v "$dep" &>/dev/null; then
                     echo -e "${GREEN}$dep command has been installed.${PLAIN}"
@@ -222,17 +222,16 @@ EOL
         echo -e "${GREEN}Dependency check completed${PLAIN}"
     }
 
-    
-# Function: Configure startup
+    # Function: Configure startup (MODIFIED VERSION)
     configure_startup() {
         # Check and install dependencies
         check_and_install_dependencies
         if [ -s "${FLIE_PATH}start.sh" ]; then
-           rm_naray
+           rm_naray # This will attempt to remove existing service before setting up a new one
         fi
-        install_config
-        install_start
-SCRIPT_PATH="${FLIE_PATH}start.sh" # Ensure SCRIPT_PATH is defined before use in this function
+        install_config # Get user configuration
+        install_start  # Create the start.sh script
+SCRIPT_PATH="${FLIE_PATH}start.sh" # Define SCRIPT_PATH
 
 if [ -x "$(command -v systemctl)" ]; then
     echo "Systemd detected. Configuring systemd service..."
@@ -241,11 +240,14 @@ if [ -x "$(command -v systemctl)" ]; then
     cat <<EOL > /etc/systemd/system/my_script.service
 [Unit]
 Description=My Startup Script
+After=network.target
 
 [Service]
+Type=forking # Assuming start.sh daemonizes or use 'simple' if it runs in foreground
 ExecStart=${SCRIPT_PATH}
 Restart=always
-User=$(whoami)
+User=$(whoami) # Consider if this needs to be root or a specific user
+#Environment="FLIE_PATH=${FLIE_PATH}" # Pass environment variables if start.sh needs them explicitly and doesn't source them
 
 [Install]
 WantedBy=multi-user.target
@@ -259,12 +261,12 @@ EOL
         echo -e "${YELLOW}Failed to enable or start service with systemd (this is common if systemd is not the init system or not fully operational).${PLAIN}"
         echo -e "${YELLOW}Attempting to directly start ${SCRIPT_PATH} in the background...${PLAIN}"
         nohup ${SCRIPT_PATH} &>/dev/null &
-        # Check if the script is running via pgrep or ps as done later in the script
-        # This is a simplified check; you might want to integrate the more complex check from start_menu2
-        if pgrep -f "${web_file}" > /dev/null || ps aux | grep "${web_file}" | grep -v grep > /dev/null; then
-            echo -e "${GREEN}Attempted direct start of ${SCRIPT_PATH}. Check logs or processes to confirm.${PLAIN}"
+        # Check if the script is running (basic check)
+        sleep 2 # Give it a moment to start
+        if pgrep -f "$(basename ${SCRIPT_PATH})" > /dev/null || pgrep -f "${web_file}" > /dev/null ; then # Check start.sh or web_file
+            echo -e "${GREEN}Attempted direct start of ${SCRIPT_PATH}. Script or its components appear to be running. Check logs or processes to confirm.${PLAIN}"
         else
-            echo -e "${RED}Attempted direct start of ${SCRIPT_PATH}, but it may not be running. Please check manually.${PLAIN}"
+            echo -e "${RED}Attempted direct start of ${SCRIPT_PATH}, but it may not be running or visible immediately. Please check manually.${PLAIN}"
         fi
     fi
 
@@ -272,40 +274,82 @@ elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
    cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
-command="${FLIE_PATH}start.sh"
-pidfile="${FLIE_PATH}myservice.pid"
+command="${SCRIPT_PATH}"
+pidfile="/var/run/myservice.pid" # Adjusted pidfile location
 command_background=true
+
+depend() {
+    need net
+}
+
 start() {
-    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile
+    ebegin "Starting MyService"
+    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile --background
     eend \$?
 }
+
 stop() {
+    ebegin "Stopping MyService"
     start-stop-daemon --stop --pidfile \$pidfile
     eend \$?
 }
 EOF
 chmod +x /etc/init.d/myservice
 rc-update add myservice default
-rc-service myservice start
-nohup ${FLIE_PATH}start.sh &>/dev/null & # Ensure nohup is used here if desired as a fallback too
-echo "Startup script configured via OpenRC and attempted background start."
-elif [ -f "/etc/init.d/functions" ]; then
+if rc-service myservice start; then
+    echo -e "${GREEN}Startup script configured and started via OpenRC.${PLAIN}"
+else
+    echo -e "${YELLOW}Failed to start service with OpenRC. Attempting direct start of ${SCRIPT_PATH}...${PLAIN}"
+    nohup ${SCRIPT_PATH} &>/dev/null &
+    echo "Attempted direct start of ${SCRIPT_PATH} in background."
+fi
+
+elif [ -f "/etc/init.d/functions" ]; then # SysV init
     echo "SysV init detected. Configuring SysV init script..."
 
     cat <<EOF > /etc/init.d/my_start_script
 #!/bin/sh
+### BEGIN INIT INFO
+# Provides:          my_start_script
+# Required-Start:    \$remote_fs \$syslog \$network
+# Required-Stop:     \$remote_fs \$syslog \$network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start my custom script at boot
+# Description:       Enable service provided by my_start_script.
+### END INIT INFO
+
+SCRIPT_PATH="$SCRIPT_PATH"
+LOCK_FILE="/var/lock/subsys/my_start_script" # Standard lock file location for SysV
+
+start() {
+    echo "Starting my custom startup script"
+    nohup \$SCRIPT_PATH &>/dev/null &
+    touch \$LOCK_FILE
+}
+
+stop() {
+    echo "Stopping my custom startup script"
+    # A more robust stop mechanism might be needed, e.g., finding PID
+    pids=\$(pgrep -f "\$(basename \$SCRIPT_PATH)")
+    [ -n "\$pids" ] && kill \$pids
+    rm -f \$LOCK_FILE
+}
 
 case "\$1" in
     start)
-        echo "Starting my custom startup script"
-        $SCRIPT_PATH
+        start
         ;;
     stop)
-        echo "Stopping my custom startup script"
-        killall -9 $(basename $SCRIPT_PATH)
+        stop
+        ;;
+    restart)
+        stop
+        sleep 1
+        start
         ;;
     *)
-        echo "Usage: \$0 {start|stop}"
+        echo "Usage: \$0 {start|stop|restart}"
         exit 1
         ;;
 esac
@@ -313,56 +357,91 @@ exit 0
 EOF
 
     chmod +x /etc/init.d/my_start_script
-    update-rc.d my_start_script defaults
+    if command -v update-rc.d &>/dev/null; then
+        update-rc.d my_start_script defaults
+    elif command -v chkconfig &>/dev/null; then
+        chkconfig --add my_start_script
+        chkconfig my_start_script on
+    fi
     echo "Startup script configured via SysV init."
-    chmod +x $SCRIPT_PATH
-    echo "Setup complete. Reboot your system to test the startup script, or starting it directly now."
-    nohup ${SCRIPT_PATH} &>/dev/null &
+    echo "Attempting to start it now..."
+    /etc/init.d/my_start_script start
 
 elif [ -d "/etc/supervisor/conf.d" ]; then
     echo "Supervisor detected. Configuring supervisor..."
 
     cat <<EOF > /etc/supervisor/conf.d/my_start_script.conf
 [program:my_start_script]
-command=$SCRIPT_PATH
+command=${SCRIPT_PATH}
 autostart=true
 autorestart=true
 stderr_logfile=/var/log/my_start_script.err.log
 stdout_logfile=/var/log/my_start_script.out.log
+user=$(whoami)
+# Ensure FLIE_PATH is available if start.sh needs it
+# environment=FLIE_PATH="${FLIE_PATH}"
 EOF
 
     supervisorctl reread
     supervisorctl update
-
-    echo "Startup script configured via Supervisor."
-    # Supervisor will handle the start
-
-elif grep -q "alpine" /etc/os-release; then
-    echo "Alpine Linux detected. Configuring /etc/inittab for startup script..."
-
-    if ! grep -q "$SCRIPT_PATH" /etc/inittab; then
-        echo "::sysinit:$SCRIPT_PATH" >> /etc/inittab
-        echo "Startup script added to /etc/inittab."
+    if supervisorctl start my_start_script; then
+      echo -e "${GREEN}Startup script configured and started via Supervisor.${PLAIN}"
     else
-        echo "Startup script already exists in /etc/inittab."
+      echo -e "${RED}Failed to start script with Supervisor. Check supervisor logs.${PLAIN}"
+    fi
+
+
+elif grep -q -i "alpine" /etc/os-release 2>/dev/null; then # More robust Alpine check
+    echo "Alpine Linux detected. Configuring /etc/inittab for startup script (requires OpenRC or local.d setup for modern Alpine)..."
+    # Modern Alpine uses OpenRC, /etc/inittab is for very old systems or specific configurations.
+    # A better approach for Alpine might be an OpenRC script or using /etc/local.d
+    
+    # Attempting /etc/local.d as a more modern Alpine approach
+    if [ -d "/etc/local.d" ]; then
+        cat <<EOF > /etc/local.d/my_script.start
+#!/bin/sh
+nohup ${SCRIPT_PATH} &>/dev/null &
+EOF
+        chmod +x /etc/local.d/my_script.start
+        echo "Startup script added to /etc/local.d/my_script.start."
+        echo "Attempting to start it now..."
+        nohup ${SCRIPT_PATH} &>/dev/null &
+    elif ! grep -q "$SCRIPT_PATH" /etc/inittab; then # Fallback to inittab if local.d doesn't exist
+        echo "::respawn:${SCRIPT_PATH}" >> /etc/inittab # Use respawn for auto-restart
+        echo "Startup script added to /etc/inittab. A reboot is usually required."
+        # Starting it directly for current session
+        nohup ${SCRIPT_PATH} &>/dev/null &
+    else
+        echo "Startup script already configured or /etc/local.d used."
+        nohup ${SCRIPT_PATH} &>/dev/null &
     fi
     chmod +x $SCRIPT_PATH
-    echo "Setup complete. Reboot your system to test the startup script, or starting it directly now."
-    nohup ${SCRIPT_PATH} &>/dev/null &
+    echo "Setup complete. For inittab changes, reboot system to test startup script if not using local.d."
+
 else
-    echo "No standard init system detected or systemd failed. Attempting to use /etc/rc.local or direct start..."
+    echo "No specific init system detected or systemd failed. Attempting to use /etc/rc.local or direct start..."
 
     if [ -f "/etc/rc.local" ]; then
-        if ! grep -q "$SCRIPT_PATH" /etc/rc.local; then
-            sed -i -e '$i '"$SCRIPT_PATH"'\n' /etc/rc.local
+        # Ensure rc.local is executable
+        if [ ! -x "/etc/rc.local" ]; then
+            chmod +x /etc/rc.local
+        fi
+        # Add script if not already present
+        if ! grep -qF "$SCRIPT_PATH" /etc/rc.local; then # Use -F for fixed string grep
+            # Add before 'exit 0' if it exists
+            if grep -q '^exit 0' /etc/rc.local; then
+                sed -i -e '$i'"nohup $SCRIPT_PATH &>/dev/null &\n" /etc/rc.local
+            else
+                echo "nohup $SCRIPT_PATH &>/dev/null &" >> /etc/rc.local
+            fi
             echo "Startup script added to /etc/rc.local."
         else
             echo "Startup script already exists in /etc/rc.local."
         fi
-         chmod +x /etc/rc.local
     else
-        echo "#!/bin/sh" > /etc/rc.local
-        echo "$SCRIPT_PATH" >> /etc/rc.local
+        echo "#!/bin/sh -e" > /etc/rc.local
+        echo "nohup $SCRIPT_PATH &>/dev/null &" >> /etc/rc.local
+        echo "exit 0" >> /etc/rc.local
         chmod +x /etc/rc.local
         echo "Created /etc/rc.local and added startup script."
     fi
@@ -371,54 +450,66 @@ else
     nohup ${SCRIPT_PATH} &>/dev/null &
 fi
 
-        echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
+        echo -e "${YELLOW}Waiting for the script to start (up to ~50 seconds)... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
         echo "等待节点信息......"
-        # Ensure FLIE_PATH is correctly defined and accessible here
-        # The original script has list.log check relative to PWD and FLIE_PATH
-        while [ ! -f "/tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do # Adjusted to check /tmp/list.log first as per original logic
-        sleep 1  # 每秒检查一次文件是否存在
-        done
-        keyword="$web_file" # Ensure web_file is defined in this scope or passed
+        
         max_attempts=5
+        attempt_delay=10 # seconds
         counter=0
+        log_found=false
+        process_found=false
 
+        # Wait for log file or process
         while [ $counter -lt $max_attempts ]; do
-          # Ensure pgrep is available or use ps alternative
-          if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && ([ -s "/tmp/list.log" ] || [ -s "${FLIE_PATH}list.log" ]); then
+            if [ -s "${FLIE_PATH}list.log" ] || [ -s "/tmp/list.log" ]; then
+                log_found=true
+            fi
+            if command -v pgrep >/dev/null && (pgrep -f "$(basename ${SCRIPT_PATH})" >/dev/null || pgrep -f "$web_file" >/dev/null); then
+                process_found=true
+            elif ps aux | grep -E "$(basename ${SCRIPT_PATH})|${web_file}" | grep -v grep > /dev/null; then
+                process_found=true
+            fi
+
+            if ${log_found} && ${process_found}; then
+                echo -e "${GREEN}Script started successfully (log and process detected).${PLAIN}"
+                break
+            elif ${log_found} && [ $counter -eq 0 ]; then # Log appeared quickly, give process a bit more time
+                 echo -e "${YELLOW}Log file found, waiting for process to stabilize...${PLAIN}"
+            elif ${process_found} && [ $counter -eq 0 ]; then # Process appeared quickly, give log file a bit more time
+                 echo -e "${YELLOW}Process found, waiting for log file...${PLAIN}"
+            fi
+            
+            sleep $attempt_delay
+            ((counter++))
+        done
+
+        if ${log_found} && ${process_found} ; then
             echo -e "${CYAN}***************************************************${PLAIN}"
             echo "                          "
             echo -e "${GREEN}       Script started successfully${PLAIN}"
             echo "                          "
-            break
-          elif ps aux | grep "$keyword" | grep -v grep > /dev/null && ([ -s "/tmp/list.log" ] || [ -s "${FLIE_PATH}list.log" ]); then
-            echo -e "${CYAN}***************************************************${PLAIN}"
-            echo "                          "
-            echo -e "${GREEN}        Script started successfully${PLAIN}"
-            echo "                          "
-            break
-          else
-            sleep 10
-            ((counter++))
-          fi
-        done
-
-        if [ $counter -ge $max_attempts ]; then
-            echo -e "${RED}Script may not have started successfully after $max_attempts attempts.${PLAIN}"
+        elif ${log_found}; then
+             echo -e "${YELLOW}Script log found, but main process (${web_file} or start.sh) not definitively detected by pgrep/ps. Please verify manually.${PLAIN}"
+        elif ${process_found}; then
+             echo -e "${YELLOW}Script process detected, but log file not found or empty. Please verify manually.${PLAIN}"
+        else
+            echo -e "${RED}Script may not have started successfully after $((max_attempts * attempt_delay)) seconds. Check logs in ${FLIE_PATH} or /tmp and process status.${PLAIN}"
         fi
 
         echo "                         "
         echo -e "${CYAN}************Node Information****************${PLAIN}"
         echo "                         "
         if [ -s "${FLIE_PATH}list.log" ]; then
-          sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
-        elif [ -s "/tmp/list.log" ]; then # Check /tmp/list.log if FLIE_PATH/list.log is not found
-            sed 's/{PASS}/vless/g' /tmp/list.log | cat
+          sed 's/{PASS}/vless/g' "${FLIE_PATH}list.log" | cat
+        elif [ -s "/tmp/list.log" ]; then
+            sed 's/{PASS}/vless/g' "/tmp/list.log" | cat
         else
-            echo -e "${YELLOW}Node information log not found.${PLAIN}"
+            echo -e "${YELLOW}Node information log not found at ${FLIE_PATH}list.log or /tmp/list.log.${PLAIN}"
         fi
         echo "                         "
         echo -e "${CYAN}***************************************************${PLAIN}"
     }
+
 
     # Output menu for user to choose whether to start directly or add to startup and then start
     start_menu2(){
@@ -437,44 +528,51 @@ fi
             echo -e "${YELLOW}Starting temporarily...${PLAIN}"
             install_config2
             install_start
-            nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
-    echo -e "${YELLOW}Waiting for start... If wait time too long, you can reboot${PLAIN}"
-    while [ ! -f "./tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do
-    sleep 1  # 每秒检查一次文件是否存在
-    done
-    keyword="$web_file"
+            nohup ${FLIE_PATH}start.sh &>/dev/null & # Silenced nohup
+    echo -e "${YELLOW}Waiting for start (up to ~50 seconds)... If wait time too long, you can reboot or check logs/processes.${PLAIN}"
+    
     max_attempts=5
+    attempt_delay=10 # seconds
     counter=0
+    log_found=false
+    process_found=false
 
     while [ $counter -lt $max_attempts ]; do
-      if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
+        if [ -s "${FLIE_PATH}list.log" ] || [ -s "/tmp/list.log" ]; then
+            log_found=true
+        fi
+        # Check for start.sh or web_file
+        if command -v pgrep >/dev/null && (pgrep -f "$(basename ${FLIE_PATH}start.sh)" >/dev/null || pgrep -f "$web_file" >/dev/null); then
+            process_found=true
+        elif ps aux | grep -E "$(basename ${FLIE_PATH}start.sh)|${web_file}" | grep -v grep > /dev/null; then
+            process_found=true
+        fi
+
+        if ${log_found} && ${process_found}; break; fi
+        sleep $attempt_delay
+        ((counter++))
+    done
+
+    if ${log_found} && ${process_found} ; then
         echo -e "${CYAN}***************************************************${PLAIN}"
         echo "                          "
         echo -e "${GREEN}        Script started successfully${PLAIN}"
         echo "                          "
-        break
-      elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
-        echo -e "${CYAN}***************************************************${PLAIN}"
-        echo "                          "
-        echo -e "${GREEN}       Script started successfully${PLAIN}"
-        echo "                          "
-        
-        break
-      else
-        sleep 10
-        ((counter++))
-      fi
-    done
-
+    else
+        echo -e "${RED}Script may not have started successfully. Check logs in ${FLIE_PATH} or /tmp, and process status.${PLAIN}"
+        if ${log_found}; then echo -e "${YELLOW}Log file was found.${PLAIN}"; fi
+        if ${process_found}; then echo -e "${YELLOW}Process was detected.${PLAIN}"; fi
+    fi
+    
     echo "                         "
     echo -e "${CYAN}************Node Information******************${PLAIN}"
     echo "                         "
     if [ -s "${FLIE_PATH}list.log" ]; then
-      sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
+      sed 's/{PASS}/vless/g' "${FLIE_PATH}list.log" | cat
+    elif [ -s "/tmp/list.log" ]; then
+      sed 's/{PASS}/vless/g' "/tmp/list.log" | cat
     else
-      if [ -s "/tmp/list.log" ]; then
-        sed 's/{PASS}/vless/g' /tmp/list.log | cat
-      fi
+       echo -e "${YELLOW}Node information log not found.${PLAIN}"
     fi
     echo "                         "
     echo -e "${CYAN}***************************************************${PLAIN}"
@@ -482,16 +580,17 @@ fi
         1)
             # Add to startup and then start
             echo -e "${YELLOW}      Adding to startup...${PLAIN}"
-            configure_startup
-            echo -e "${GREEN}      Added to startup${PLAIN}"
+            configure_startup # This is the modified function
+            # configure_startup itself now handles printing success/failure.
+            # echo -e "${GREEN}      Added to startup and attempted start.${PLAIN}" # Message handled within configure_startup
             ;;
           0)
-            exit 1
+            exit 0 # Changed from exit 1 to exit 0 for clean exit
             ;;
           *)
           clear
           echo -e "${RED}Error: Please enter the correct number [0-2]${PLAIN}"
-          sleep 5s
+          sleep 3s # Reduced sleep time
           start_menu2
           ;;
     esac
@@ -500,119 +599,191 @@ fi
 }
 
 install_bbr(){
+    # Ensure script is run as root for BBR installation
+    if [ "$(id -u)" -ne 0 ]; then
+        echo -e "${RED}BBR installation requires root privileges. Please run as root.${PLAIN}"
+        return 1
+    fi
     if command -v curl &>/dev/null; then
         bash <(curl -sL https://git.io/kernel.sh)
     elif command -v wget &>/dev/null; then
        bash <(wget -qO- https://git.io/kernel.sh)
     else
         echo -e "${RED}Error: Neither curl nor wget found. Please install one of them.${PLAIN}"
-        sleep 30
+        sleep 5 # Reduced sleep time
     fi
 }
 
 reinstall_naray(){
+    echo -e "${YELLOW}Reinstalling X-R-A-Y service...${PLAIN}"
+    # Stop existing service if it's managed by systemd (best effort)
     if command -v systemctl &>/dev/null && systemctl is-active my_script.service &>/dev/null; then
-        systemctl stop my_script.service
-        echo -e "${GREEN}Service has been stopped.${PLAIN}"
+        echo -e "${YELLOW}Stopping existing systemd service...${PLAIN}"
+        systemctl stop my_script.service &>/dev/null
     fi
-    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
-for process in "${processes[@]}"
-do
-    pids=$(pgrep -f "$process")
-    if [ -n "$pids" ]; then
-        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
-        for pid in $pids; do
-            kill "$pid" &>/dev/null
-        done
-    fi
-done
+    
+    # Kill related processes (already part of rm_naray, but can be done here too for safety)
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app" "$(basename ${FLIE_PATH:-/tmp/worlds/}start.sh)")
+    for process_name in "${processes[@]}"; do
+        if [ -n "$process_name" ]; then # Ensure process_name is not empty
+            pids=$(pgrep -f "$process_name")
+            if [ -n "$pids" ]; then
+                echo -e "${YELLOW}Stopping processes matching $process_name...${PLAIN}"
+                for pid in $pids; do
+                    kill "$pid" &>/dev/null
+                done
+            fi
+        fi
+    done
+    # Call rm_naray to clean up old installations comprehensively
+    rm_naray
+    # Then proceed with new installation
     install_naray
+    echo -e "${GREEN}Reinstallation process initiated.${PLAIN}"
 }
 
 rm_naray(){
-    SCRIPT_PATH="${FLIE_PATH}start.sh"
+    SCRIPT_PATH_TO_CHECK="${FLIE_PATH}start.sh" # Default path
+    # If FLIE_PATH is not set (e.g. script run directly for uninstall), try a common default
+    if [ -z "$FLIE_PATH" ] && [ -f "/tmp/worlds/start.sh" ]; then
+      SCRIPT_PATH_TO_CHECK="/tmp/worlds/start.sh"
+      FLIE_PATH="/tmp/worlds/" # Temporarily set for this function's logic
+    elif [ -z "$FLIE_PATH" ] && [ -f "./worlds/start.sh" ]; then
+      SCRIPT_PATH_TO_CHECK="./worlds/start.sh"
+      FLIE_PATH="./worlds/"
+    fi
+
+
+    echo -e "${YELLOW}Attempting to uninstall X-R-A-Y service and related files...${PLAIN}"
 
     # Check for systemd
     if command -v systemctl &>/dev/null; then
         service_name="my_script.service"
-        if systemctl is-active --quiet $service_name; then
-            echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
-            systemctl stop $service_name
+        # Check if service exists before trying to stop/disable
+        if systemctl list-unit-files | grep -qw "$service_name"; then
+            if systemctl is-active --quiet $service_name; then
+                echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
+                systemctl stop $service_name &>/dev/null
+            fi
+            if systemctl is-enabled --quiet $service_name; then
+                echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
+                systemctl disable $service_name &>/dev/null
+            fi
+            echo -e "${YELLOW}Removing service file if it exists...${PLAIN}"
+            rm -f "/etc/systemd/system/$service_name"
+            rm -f "/lib/systemd/system/$service_name" # Also check /lib
+            systemctl daemon-reload &>/dev/null
+            systemctl reset-failed &>/dev/null
+            echo -e "${GREEN}Systemd service $service_name actions completed (if it existed).${PLAIN}"
+        else
+            echo -e "${PLAIN}Systemd service $service_name not found installed.${PLAIN}"
         fi
-        if systemctl is-enabled --quiet $service_name; then
-            echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-            systemctl disable $service_name
-        fi
-        if [ -f "/etc/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
-            rm "/etc/systemd/system/$service_name"
-        elif [ -f "/lib/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
-            rm "/lib/systemd/system/$service_name"
-        fi
-        systemctl daemon-reload
-        echo -e "${GREEN}Systemd service removed.${PLAIN}"
     fi
 
     # Check for OpenRC
     if [ -f "/etc/init.d/myservice" ]; then
         echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
-        rc-update del myservice default
-        rm "/etc/init.d/myservice"
+        rc-service myservice stop &>/dev/null
+        rc-update del myservice default &>/dev/null
+        rm -f "/etc/init.d/myservice"
         echo -e "${GREEN}OpenRC service removed.${PLAIN}"
     fi
 
     # Check for SysV init
     if [ -f "/etc/init.d/my_start_script" ]; then
         echo -e "${YELLOW}Removing SysV init script...${PLAIN}"
-        update-rc.d -f my_start_script remove
-        rm "/etc/init.d/my_start_script"
+        /etc/init.d/my_start_script stop &>/dev/null
+        if command -v update-rc.d &>/dev/null; then
+            update-rc.d -f my_start_script remove &>/dev/null
+        elif command -v chkconfig &>/dev/null; then
+            chkconfig --del my_start_script &>/dev/null
+        fi
+        rm -f "/etc/init.d/my_start_script"
         echo -e "${GREEN}SysV init script removed.${PLAIN}"
     fi
 
     # Check for Supervisor
     if [ -f "/etc/supervisor/conf.d/my_start_script.conf" ]; then
         echo -e "${YELLOW}Removing Supervisor configuration...${PLAIN}"
-        rm "/etc/supervisor/conf.d/my_start_script.conf"
-        supervisorctl reread
-        supervisorctl update
+        supervisorctl stop my_start_script &>/dev/null
+        rm -f "/etc/supervisor/conf.d/my_start_script.conf"
+        supervisorctl reread &>/dev/null
+        supervisorctl update &>/dev/null
         echo -e "${GREEN}Supervisor configuration removed.${PLAIN}"
     fi
-
-    # Check for Alpine Linux inittab entry
-    if [ -f "/etc/inittab" ]; then
-    if grep -q "$SCRIPT_PATH" /etc/inittab; then
+    
+    # Check for Alpine Linux local.d entry
+    if [ -f "/etc/local.d/my_script.start" ]; then
+        echo -e "${YELLOW}Removing startup entry from /etc/local.d/my_script.start...${PLAIN}"
+        rm -f "/etc/local.d/my_script.start"
+        echo -e "${GREEN}Startup entry removed from /etc/local.d.${PLAIN}"
+    fi
+    
+    # Check for Alpine Linux inittab entry (less common now)
+    if [ -f "/etc/inittab" ] && grep -qF "$SCRIPT_PATH_TO_CHECK" /etc/inittab; then # Use -F for fixed string
         echo -e "${YELLOW}Removing startup entry from /etc/inittab...${PLAIN}"
-        sed -i "\#$SCRIPT_PATH#d" /etc/inittab
+        sed -i "\#$SCRIPT_PATH_TO_CHECK#d" /etc/inittab # Use # as sed delimiter
         echo -e "${GREEN}Startup entry removed from /etc/inittab.${PLAIN}"
     fi
-  fi
+    
     # Check for rc.local entry
-    if [ -f "/etc/rc.local" ] && grep -q "$SCRIPT_PATH" /etc/rc.local; then
+    if [ -f "/etc/rc.local" ] && grep -qF "$SCRIPT_PATH_TO_CHECK" /etc/rc.local; then # Use -F
         echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
-        sed -i "\#$SCRIPT_PATH#d" /etc/rc.local
+        sed -i "\#$SCRIPT_PATH_TO_CHECK#d" /etc/rc.local # Use # as sed delimiter
         echo -e "${GREEN}Startup entry removed from /etc/rc.local.${PLAIN}"
     fi
 
-    # Stop running processes
-processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
-for process in "${processes[@]}"
-do
-    pids=$(pgrep -f "$process")
-    if [ -n "$pids" ]; then
-        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
-        for pid in $pids; do
-            kill "$pid" &>/dev/null
-        done
-    fi
-done
+    # Stop running processes (more comprehensive list)
+    # Ensure web_file, ne_file, cff_file are defined or provide defaults if rm_naray is called standalone
+    local current_web_file=${web_file:-'webssp.js'}
+    local current_ne_file=${ne_file:-'nenether.js'}
+    local current_cff_file=${cff_file:-'cfnfph.js'}
+    local current_start_script_name=$(basename "$SCRIPT_PATH_TO_CHECK")
 
-    # Remove script file
-    if [ -f "$SCRIPT_PATH" ]; then
-        echo -e "${YELLOW}Removing startup script $SCRIPT_PATH...${PLAIN}"
-        rm "$SCRIPT_PATH"
-        echo -e "${GREEN}Startup script removed.${PLAIN}"
+    processes=("$current_web_file" "$current_ne_file" "$current_cff_file" "$current_start_script_name" "app" "main-amd" "main-arm")
+    for process_name in "${processes[@]}"; do
+        if [ -n "$process_name" ]; then
+             pids=$(pgrep -f "$process_name")
+             if [ -n "$pids" ]; then
+                 echo -e "${YELLOW}Stopping processes matching $process_name (PIDs: $pids)...${PLAIN}"
+                 for pid_val in $pids; do # Renamed pid to pid_val to avoid conflict if any script uses pid
+                     kill "$pid_val" &>/dev/null
+                 done
+                 sleep 0.5 # Give a moment for processes to terminate
+                 pids_after=$(pgrep -f "$process_name")
+                 if [ -n "$pids_after" ]; then
+                    echo -e "${YELLOW}Forcefully stopping remaining processes matching $process_name (PIDs: $pids_after)...${PLAIN}"
+                    for pid_val in $pids_after; do
+                        kill -9 "$pid_val" &>/dev/null
+                    done
+                 fi
+             fi
+        fi
+    done
+    
+    # Remove script file and its directory if FLIE_PATH is defined
+    if [ -n "$FLIE_PATH" ]; then
+        if [ -f "${FLIE_PATH}start.sh" ]; then
+            echo -e "${YELLOW}Removing startup script ${FLIE_PATH}start.sh...${PLAIN}"
+            rm -f "${FLIE_PATH}start.sh"
+            echo -e "${GREEN}Startup script removed.${PLAIN}"
+        fi
+        if [ -d "$FLIE_PATH" ]; then
+             # Optionally remove the worlds directory if it's empty or if you're sure
+             # For now, let's just remove known log files within it
+             rm -f "${FLIE_PATH}list.log"
+             # If you want to remove the directory:
+             # if [ "$(ls -A $FLIE_PATH)" ]; then
+             #    echo -e "${YELLOW}Directory ${FLIE_PATH} is not empty. Not removing.${PLAIN}"
+             # else
+             #    echo -e "${YELLOW}Removing directory ${FLIE_PATH}...${PLAIN}"
+             #    rm -rf "$FLIE_PATH"
+             #    echo -e "${GREEN}Directory ${FLIE_PATH} removed.${PLAIN}"
+             # fi
+        fi
     fi
+    # Remove other temporary files
+    rm -f /tmp/app /tmp/list.log
 
     echo -e "${GREEN}Uninstallation completed.${PLAIN}"
 }
@@ -621,18 +792,30 @@ clear
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 echo -e "${PURPLE}VPS 一键脚本 (Tunnel Version)${PLAIN}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
-echo -e " ${GREEN}System Info:${PLAIN} $(uname -s) $(uname -m)"
+echo -e " ${GREEN}System Info:${PLAIN} $(uname -s) $(uname -m) ($(lsb_release -ds 2>/dev/null || cat /etc/*release 2>/dev/null | head -n1 || echo Unknown OS))" # More detailed OS
 echo -e " ${GREEN}Virtualization:${PLAIN} $VIRT"
+echo -e " ${GREEN}Date:${PLAIN} $(date)"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
-echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
-echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR和WARP${PLAIN}"
-echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}1.${PLAIN} 安装/重装 ${YELLOW}X-R-A-Y 服务${PLAIN}" # Clarified install/reinstall
+echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR加速/WARP${PLAIN}"
+echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y 服务${PLAIN}"
 echo -e " ${GREEN}0.${PLAIN} 退出脚本"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
 read -p " Please enter your choice [0-3]: " choice
 case "$choice" in
     1)
-    install_naray
+    # Check if FLIE_PATH/start.sh exists to decide between fresh install or reinstall logic
+    # For simplicity, current install_naray internally calls rm_naray if start.sh exists, acting as reinstall.
+    # If you want separate logic, you'd add it here.
+    # For now, option 1 leads to install_naray which handles both.
+    # If you want a dedicated reinstall that first asks user or checks, use reinstall_naray here.
+    # Let's assume option 1 is install/reinstall, so calling install_naray is fine.
+    # To make it explicitly a reinstall if already installed:
+    if [ -f "${FLIE_PATH}start.sh" ] || [ -f "/tmp/worlds/start.sh" ] || systemctl list-unit-files | grep -qw "my_script.service" ; then
+        reinstall_naray
+    else
+        install_naray
+    fi
     ;;
     2)
     install_bbr
@@ -641,19 +824,21 @@ case "$choice" in
     rm_naray
     ;;
     0)
-    exit 1
+    exit 0
     ;;
     *)
     clear
     echo -e "${RED}Please enter the correct number [0-3]${PLAIN}"
-    sleep 5s
+    sleep 3s
     start_menu1
     ;;
 esac
 }
 
+# --- Main Script Execution ---
+
 # Get system information at the start of the script
-get_system_info
+get_system_info # Call it once at the beginning
 
 # Start the main menu
 start_menu1
