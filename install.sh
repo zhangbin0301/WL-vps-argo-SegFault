@@ -62,10 +62,10 @@ install_naray(){
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
 
-        echo -e -n "${GREEN}请输入 NEZHA_SERVER (不需要，留空即可): ${PLAIN}"
+        echo -e -n "${GREEN}请输入 NEZHA_SERVER (没有可以不填): ${PLAIN}"
         read NEZHA_SERVER
 
-        echo -e -n "${GREEN}请输入NEZHA_KEY (不需要，留空即可): ${PLAIN}"
+        echo -e -n "${GREEN}请输入NEZHA_KEY (没有可以不填): ${PLAIN}"
         read NEZHA_KEY
 
         echo -e -n "${GREEN}请输入 NEZHA_PORT (默认443): ${PLAIN}"
@@ -112,13 +112,13 @@ done
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
 
-        echo -e -n "${GREEN}Please enter NEZHA_SERVER (leave blank if not needed): ${PLAIN}"
+        echo -e -n "${GREEN}Please enter NEZHA_SERVER (没有可以不填): ${PLAIN}"
         read NEZHA_SERVER
 
-        echo -e -n "${GREEN}Please enter NEZHA_KEY (leave blank if not needed): ${PLAIN}"
+        echo -e -n "${GREEN}Please enter NEZHA_KEY (没有可以不填): ${PLAIN}"
         read NEZHA_KEY
 
-        echo -e -n "${GREEN}Please enter NEZHA_PORT (default: 443): ${PLAIN}"
+        echo -e -n "${GREEN}Please enter NEZHA_PORT (默认: 443): ${PLAIN}"
         read NEZHA_PORT
         NEZHA_PORT=${NEZHA_PORT:-"443"}
 
