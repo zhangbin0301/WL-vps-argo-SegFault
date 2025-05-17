@@ -1,25 +1,32 @@
 # vps-Argo一键xray脚本
 
 声明：本仓库仅为自用备份，不适合别人使用，非开源项目，请勿擅自使用与传播，否则责任自负
+复制下面命令之一即可
+
+========================================
 ```
 bash -c "$(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)"
 ```
-或者
 ```
 bash -c "$(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh)"
 ```
-
-
+curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh -o install.sh && chmod +x install.sh && ./install.sh
+```
+wget -O install.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install.sh && chmod +x install.sh && ./install.sh
+```
 ========================================
 
-
-
-
+下面为自用版本：
 ```
 bash -c "$(curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh)"
 ```
 ```
 bash -c "$(wget -qO- https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh)"
+```
+```
+curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh -o install2.sh && chmod +x install2.sh && ./install2.sh
+```
+wget -O install2.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh && chmod +x install2.sh && ./install2.sh
 ```
 # 免声明:
 
