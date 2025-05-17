@@ -40,10 +40,10 @@ install_naray(){
     fi
     
     if [ -f "/tmp/list.log" ]; then
-    rm -rf /tmp/list.log
+      rm -rf /tmp/list.log
     fi
     if [ -f "${FLIE_PATH}list.log" ]; then
-    rm -rf ${FLIE_PATH}list.log
+      rm -rf ${FLIE_PATH}list.log
     fi
 
     install_config(){
@@ -62,10 +62,10 @@ install_naray(){
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
 
-        echo -e -n "${GREEN}请输入 NEZHA_SERVER (不需要，留空即可): ${PLAIN}"
+        echo -e -n "${GREEN}请输入 NEZHA_SERVER (没有可以不填): ${PLAIN}"
         read NEZHA_SERVER
 
-        echo -e -n "${GREEN}请输入NEZHA_KEY (不需要，留空即可): ${PLAIN}"
+        echo -e -n "${GREEN}请输入NEZHA_KEY (没有可以不填): ${PLAIN}"
         read NEZHA_KEY
 
         echo -e -n "${GREEN}请输入 NEZHA_PORT (默认443): ${PLAIN}"
@@ -112,13 +112,13 @@ done
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
 
-        echo -e -n "${GREEN}Please enter NEZHA_SERVER (leave blank if not needed): ${PLAIN}"
+        echo -e -n "${GREEN}Please enter NEZHA_SERVER (没有可以不填): ${PLAIN}"
         read NEZHA_SERVER
 
-        echo -e -n "${GREEN}Please enter NEZHA_KEY (leave blank if not needed): ${PLAIN}"
+        echo -e -n "${GREEN}Please enter NEZHA_KEY (没有可以不填): ${PLAIN}"
         read NEZHA_KEY
 
-        echo -e -n "${GREEN}Please enter NEZHA_PORT (default: 443): ${PLAIN}"
+        echo -e -n "${GREEN}Please enter NEZHA_PORT (默认: 443): ${PLAIN}"
         read NEZHA_PORT
         NEZHA_PORT=${NEZHA_PORT:-"443"}
 
@@ -355,7 +355,7 @@ else
 fi
 
         echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
-        echo "等待节点信息......"
+        echo "......等待节点信息.....约1分钟......"
         while [ ! -f "./tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do
         sleep 1  # 每秒检查一次文件是否存在
         done
@@ -488,70 +488,86 @@ install_bbr(){
 
 reinstall_naray(){
     if command -v systemctl &>/dev/null && systemctl is-active my_script.service &>/dev/null; then
-        systemctl stop my_script.service
+        systemctl stop my_script.service &
         echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
     processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
-for process in "${processes[@]}"
-do
-    pids=$(pgrep -f "$process")
-    if [ -n "$pids" ]; then
+    for process in "${processes[@]}"
+    do
+     pids=$(pgrep -f "$process")
+     if [ -n "$pids" ]; then
         echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
         for pid in $pids; do
             kill "$pid" &>/dev/null
         done
-    fi
-done
-    install_naray
+     fi
+     done
+     install_naray
 }
 
 rm_naray(){
-    SCRIPT_PATH="${FLIE_PATH}start.sh"
 
-    # Check for systemd
-    if command -v systemctl &>/dev/null; then
-        service_name="my_script.service" &
-        if systemctl is-active --quiet $service_name; then
-            echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
-            systemctl stop $service_name &
-        fi
-        if systemctl is-enabled --quiet $service_name; then
-            echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-            systemctl disable $service_name &
-        fi
-        if [ -f "/etc/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
-            rm "/etc/systemd/system/$service_name" &
-        elif [ -f "/lib/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
-            rm "/lib/systemd/system/$service_name" &
-        fi
-        systemctl daemon-reload &
-        echo -e "${GREEN}Systemd service removed.${PLAIN}"
+# Check if systemctl is available and functional
+if command -v systemctl &>/dev/null && systemctl list-units --no-pager &>/dev/null; then
+    echo -e "${GREEN}Systemd is available and functional.${PLAIN}"
+    
+    # Stop the service if it's running
+    if systemctl is-active --quiet "$service_name" 2>/dev/null; then
+        echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
+        systemctl stop "$service_name" || echo -e "${RED}Failed to stop service.${PLAIN}"
     fi
-
+    
+    # Disable the service if it's enabled
+    if systemctl is-enabled --quiet "$service_name" 2>/dev/null; then
+        echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
+        systemctl disable "$service_name" || echo -e "${RED}Failed to disable service.${PLAIN}"
+    fi
+    
+    # Remove service file with permission check
+    if [ -f "/etc/systemd/system/$service_name" ]; then
+        echo -e "${YELLOW}Attempting to remove service file /etc/systemd/system/$service_name...${PLAIN}"
+        if [ -w "/etc/systemd/system/$service_name" ] || [ "$(id -u)" -eq 0 ]; then
+            rm "/etc/systemd/system/$service_name" && echo -e "${GREEN}Service file removed.${PLAIN}" || echo -e "${RED}Failed to remove service file. Permission denied.${PLAIN}"
+        else
+            echo -e "${RED}Permission denied. Try running with sudo.${PLAIN}"
+        fi
+    elif [ -f "/lib/systemd/system/$service_name" ]; then
+        echo -e "${YELLOW}Attempting to remove service file /lib/systemd/system/$service_name...${PLAIN}"
+        if [ -w "/lib/systemd/system/$service_name" ] || [ "$(id -u)" -eq 0 ]; then
+            rm "/lib/systemd/system/$service_name" && echo -e "${GREEN}Service file removed.${PLAIN}" || echo -e "${RED}Failed to remove service file. Permission denied.${PLAIN}"
+        else
+            echo -e "${RED}Permission denied. Try running with sudo.${PLAIN}"
+        fi
+    fi
+    
+    # Reload systemd configuration with error handling
+    systemctl daemon-reload 2>/dev/null || echo -e "${RED}Failed to reload systemd configuration.${PLAIN}"
+    echo -e "${GREEN}Systemd service management completed.${PLAIN}"
+  else
+    echo -e "${YELLOW}Systemd is not available or not running properly.${PLAIN}"
+   fi
     # Check for OpenRC
     if [ -f "/etc/init.d/myservice" ]; then
         echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
-        rc-update del myservice default &
-        rm "/etc/init.d/myservice" &
+        nohup rc-update del myservice default  &
+        nohup rm "/etc/init.d/myservice"  &
         echo -e "${GREEN}OpenRC service removed.${PLAIN}"
     fi
 
     # Check for SysV init
     if [ -f "/etc/init.d/my_start_script" ]; then
         echo -e "${YELLOW}Removing SysV init script...${PLAIN}"
-        update-rc.d -f my_start_script remove &
-        rm "/etc/init.d/my_start_script" &
+        nohup update-rc.d -f my_start_script remove  &
+        nohup rm "/etc/init.d/my_start_script"  &
         echo -e "${GREEN}SysV init script removed.${PLAIN}"
     fi
 
     # Check for Supervisor
     if [ -f "/etc/supervisor/conf.d/my_start_script.conf" ]; then
         echo -e "${YELLOW}Removing Supervisor configuration...${PLAIN}"
-        rm "/etc/supervisor/conf.d/my_start_script.conf"
-        supervisorctl reread &
-        supervisorctl update &
+        nohup rm "/etc/supervisor/conf.d/my_start_script.conf"  &
+        nohup supervisorctl reread  &
+        nohup supervisorctl update  &
         echo -e "${GREEN}Supervisor configuration removed.${PLAIN}"
     fi
 
@@ -559,34 +575,33 @@ rm_naray(){
     if [ -f "/etc/inittab" ]; then
     if grep -q "$SCRIPT_PATH" /etc/inittab; then
         echo -e "${YELLOW}Removing startup entry from /etc/inittab...${PLAIN}"
-        sed -i "\#$SCRIPT_PATH#d" /etc/inittab &
+        nohup sed -i "\#$SCRIPT_PATH#d" /etc/inittab  &
         echo -e "${GREEN}Startup entry removed from /etc/inittab.${PLAIN}"
     fi
   fi
     # Check for rc.local entry
     if [ -f "/etc/rc.local" ] && grep -q "$SCRIPT_PATH" /etc/rc.local; then
         echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
-        sed -i "\#$SCRIPT_PATH#d" /etc/rc.local &
+        nohup sed -i "\#$SCRIPT_PATH#d" /etc/rc.local  &
         echo -e "${GREEN}Startup entry removed from /etc/rc.local.${PLAIN}"
     fi
 
     # Stop running processes
-processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
-for process in "${processes[@]}"
-do
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+    for process in "${processes[@]}"
+    do
     pids=$(pgrep -f "$process")
-    if [ -n "$pids" ]; then
+      if [ -n "$pids" ]; then
         echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
         for pid in $pids; do
             kill "$pid" &>/dev/null
         done
-    fi
-done
-
+      fi
+    done
     # Remove script file
     if [ -f "$SCRIPT_PATH" ]; then
         echo -e "${YELLOW}Removing startup script $SCRIPT_PATH...${PLAIN}"
-        rm "$SCRIPT_PATH"
+        rm -rf "$SCRIPT_PATH"
         echo -e "${GREEN}Startup script removed.${PLAIN}"
     fi
 
