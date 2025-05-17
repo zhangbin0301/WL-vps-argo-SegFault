@@ -505,8 +505,6 @@ done
 }
 
 rm_naray(){
-    SCRIPT_PATH="${FLIE_PATH}start.sh"
-
     # Check for systemd
     if command -v systemctl &>/dev/null; then
         service_name="my_script.service"
@@ -582,14 +580,6 @@ do
     fi
 done
 
-    # Remove script file
-    if [ -f "$SCRIPT_PATH" ]; then
-        echo -e "${YELLOW}Removing startup script $SCRIPT_PATH...${PLAIN}"
-        rm "$SCRIPT_PATH"
-        echo -e "${GREEN}Startup script removed.${PLAIN}"
-    fi
-
-    echo -e "${GREEN}Uninstallation completed.${PLAIN}"
 }
 start_menu1(){
 clear
