@@ -9,309 +9,174 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 PLAIN='\033[0m'
 
-# Script version
-VERSION="1.0.1"
-
-# Log file
-LOG_FILE="/tmp/vps_script.log"
-
-# Function to log messages
-log_message() {
-    local level="$1"
-    local message="$2"
-    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    echo -e "[$timestamp] [$level] $message" >> "$LOG_FILE"
-}
-
-# Function to display and log messages
-print_and_log() {
-    local level="$1"
-    local message="$2"
-    local color="$PLAIN"
-    
-    case "$level" in
-        "INFO") color="$GREEN" ;;
-        "WARNING") color="$YELLOW" ;;
-        "ERROR") color="$RED" ;;
-    esac
-    
-    echo -e "${color}${message}${PLAIN}"
-    log_message "$level" "$message"
-}
-
-# Check if running as root
-check_root() {
-    if [ "$(id -u)" -ne 0 ]; then
-        print_and_log "WARNING" "当前非root用户，某些功能可能受限"
-        return 1
-    fi
-    return 0
-}
-
-# Check if systemd is available
-has_systemd() {
-    if command -v systemctl >/dev/null 2>&1; then
-        return 0
-    fi
-    return 1
-}
+echo -e "${CYAN}=======VPS 一键脚本(Tunnel Version)============${PLAIN}"
+echo "                      "
+echo "                      "
 
 # Get system information
 get_system_info() {
     ARCH=$(uname -m)
-    KERNEL=$(uname -r)
-    OS_TYPE=$(uname -s)
-    
-    # Try to detect virtualization
-    if command -v systemd-detect-virt >/dev/null 2>&1; then
-        VIRT=$(systemd-detect-virt 2>/dev/null || echo "Unknown")
-    elif [ -f "/proc/cpuinfo" ]; then
-        if grep -q "hypervisor" /proc/cpuinfo; then
-            VIRT="VM-based"
-        elif dmesg | grep -qi "kvm\|qemu\|virtualbox\|vmware\|xen\|docker\|lxc"; then
-            VIRT="Container/VM"
-        else
-            VIRT="Likely Physical"
-        fi
-    else
-        VIRT="Unknown"
-    fi
-    
-    # Get OS distribution if possible
-    if [ -f /etc/os-release ]; then
-        source /etc/os-release
-        DISTRO="${ID}-${VERSION_ID}"
-    else
-        DISTRO="Unknown"
-    fi
-    
-    print_and_log "INFO" "系统信息: $OS_TYPE $ARCH ($KERNEL)"
-    print_and_log "INFO" "发行版: $DISTRO"
-    print_and_log "INFO" "虚拟化类型: $VIRT"
+    VIRT=$(systemd-detect-virt 2>/dev/null || echo "Unknown")
 }
 
-# Check and install dependencies
-check_and_install_dependencies() {
-    print_and_log "INFO" "正在检查依赖项..."
-    
-    # List of dependencies
-    dependencies=("curl" "wget" "pgrep" "pidof" "grep" "sed" "awk")
-    
-    local missing_deps=()
-    
-    # Check for missing dependencies
-    for dep in "${dependencies[@]}"; do
-        if ! command -v "$dep" &>/dev/null; then
-            missing_deps+=("$dep")
-        fi
-    done
-    
-    # Install missing dependencies if any
-    if [ ${#missing_deps[@]} -gt 0 ]; then
-        print_and_log "INFO" "需要安装的依赖项: ${missing_deps[*]}"
-        
-        # Try to determine package manager
-        if command -v apt-get &>/dev/null; then
-            print_and_log "INFO" "使用apt-get安装依赖项"
-            apt-get update -qq
-            apt-get install -y "${missing_deps[@]}" >> "$LOG_FILE" 2>&1
-        elif command -v yum &>/dev/null; then
-            print_and_log "INFO" "使用yum安装依赖项"
-            yum install -y "${missing_deps[@]}" >> "$LOG_FILE" 2>&1
-        elif command -v dnf &>/dev/null; then
-            print_and_log "INFO" "使用dnf安装依赖项"
-            dnf install -y "${missing_deps[@]}" >> "$LOG_FILE" 2>&1
-        elif command -v apk &>/dev/null; then
-            print_and_log "INFO" "使用apk安装依赖项"
-            apk add --no-cache "${missing_deps[@]}" >> "$LOG_FILE" 2>&1
-        else
-            print_and_log "ERROR" "无法确定包管理器，请手动安装以下依赖项: ${missing_deps[*]}"
-            return 1
-        fi
-        
-        # Verify dependencies were installed
-        local still_missing=()
-        for dep in "${missing_deps[@]}"; do
-            if ! command -v "$dep" &>/dev/null; then
-                still_missing+=("$dep")
-            fi
-        done
-        
-        if [ ${#still_missing[@]} -gt 0 ]; then
-            print_and_log "ERROR" "以下依赖项安装失败: ${still_missing[*]}"
-            print_and_log "WARNING" "脚本将继续运行，但可能出现问题"
-        else
-            print_and_log "INFO" "所有依赖项安装成功"
-        fi
-    else
-        print_and_log "INFO" "所有依赖项已安装"
-    fi
-    
-    return 0
-}
-
-# Initialize configuration variables with defaults
-init_config_vars() {
-    # Define default file names
+install_naray(){
     export ne_file=${ne_file:-'nenether.js'}
     export cff_file=${cff_file:-'cfnfph.js'}
     export web_file=${web_file:-'webssp.js'}
     
-    # Set file path with proper handling
-    if [[ "$PWD" == */ ]]; then
-        FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
+    # Set other parameters
+    if [[ $PWD == */ ]]; then
+      FLIE_PATH="${FLIE_PATH:-${PWD}worlds/}"
     else
-        FLIE_PATH="${FLIE_PATH:-${PWD}/worlds/}"
+      FLIE_PATH="${FLIE_PATH:-${PWD}/worlds/}"
     fi
     
-    # Ensure the path exists with proper permissions
     if [ ! -d "${FLIE_PATH}" ]; then
-        print_and_log "INFO" "创建目录: ${FLIE_PATH}"
-        if ! mkdir -p -m 755 "${FLIE_PATH}"; then
-            print_and_log "ERROR" "创建目录失败，权限不足: ${FLIE_PATH}"
-            print_and_log "INFO" "尝试在/tmp目录下创建备用目录"
-            FLIE_PATH="/tmp/worlds/"
-            if ! mkdir -p -m 755 "${FLIE_PATH}"; then
-                print_and_log "ERROR" "创建备用目录失败: ${FLIE_PATH}"
-                return 1
-            fi
-        fi
+      if mkdir -p -m 755 "${FLIE_PATH}"; then
+        echo ""
+      else 
+        echo -e "${RED}Insufficient permissions, unable to create file${PLAIN}"
+      fi
     fi
     
-    # Clean up any existing log files
     if [ -f "/tmp/list.log" ]; then
-        rm -rf /tmp/list.log
+    rm -rf /tmp/list.log
     fi
     if [ -f "${FLIE_PATH}list.log" ]; then
-        rm -rf "${FLIE_PATH}list.log"
+    rm -rf ${FLIE_PATH}list.log
     fi
-    
-    print_and_log "INFO" "配置初始化完成"
-    print_and_log "INFO" "文件路径: ${FLIE_PATH}"
-    return 0
-}
 
-# Get user configuration input
-get_user_config() {
-    print_and_log "INFO" "开始配置节点..."
-    
-    # Node type
-    echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hy2, tuic, 3x 默认: vls):${PLAIN}"
-    read TMP_ARGO
-    export TMP_ARGO=${TMP_ARGO:-'vls'}
-    print_and_log "INFO" "节点类型: $TMP_ARGO"
-    
-    # Port for specific protocols
-    if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ] || [ "${TMP_ARGO}" = "3x" ]; then
+    install_config(){
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hy2, tuic,3x 默认: vls):${PLAIN}"
+        read TMP_ARGO
+        export TMP_ARGO=${TMP_ARGO:-'vls'}  
+
+        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入节点端口 (默认443):${PLAIN}"
         read SERVER_PORT
-        export SERVER_PORT=${SERVER_PORT:-"443"}
-        print_and_log "INFO" "节点端口: $SERVER_PORT"
-    fi
-    
-    # Node upload URL
-    echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
-    read SUB_URL
-    print_and_log "INFO" "节点上传地址: $SUB_URL"
-    
-    # Node name
-    echo -e -n "${GREEN}请输入节点名称 (默认: vps): ${PLAIN}"
-    read SUB_NAME
-    export SUB_NAME=${SUB_NAME:-"vps"}
-    print_and_log "INFO" "节点名称: $SUB_NAME"
-    
-    # NEZHA monitoring configuration
-    echo -e -n "${GREEN}请输入 NEZHA_SERVER (不需要，留空即可): ${PLAIN}"
-    read NEZHA_SERVER
-    print_and_log "INFO" "NEZHA_SERVER: $NEZHA_SERVER"
-    
-    echo -e -n "${GREEN}请输入NEZHA_KEY (不需要，留空即可): ${PLAIN}"
-    read NEZHA_KEY
-    print_and_log "INFO" "NEZHA_KEY: $NEZHA_KEY"
-    
-    echo -e -n "${GREEN}请输入 NEZHA_PORT (默认443): ${PLAIN}"
-    read NEZHA_PORT
-    export NEZHA_PORT=${NEZHA_PORT:-"443"}
-    print_and_log "INFO" "NEZHA_PORT: $NEZHA_PORT"
-    
-    echo -e -n "${GREEN}是否启用哪吒tls (1 启用, 0 关闭，默认启用): ${PLAIN}"
-    read NEZHA_TLS
-    export NEZHA_TLS=${NEZHA_TLS:-"1"}
-    print_and_log "INFO" "NEZHA_TLS: $NEZHA_TLS"
-    
-    # Tunnel configuration for specific protocols
-    if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "xhttp" ] || [ "${TMP_ARGO}" = "spl" ] || [ "${TMP_ARGO}" = "3x" ]; then
+        SERVER_POT=${SERVER_PORT:-"443"}
+        fi
+        echo -e -n "${GREEN}请输入节点上传地址: ${PLAIN}"
+        read SUB_URL
+        echo -e -n "${GREEN}请输入节点名称 (默认: vps): ${PLAIN}"
+        read SUB_NAME
+        SUB_NAME=${SUB_NAME:-"vps"}
+
+        echo -e -n "${GREEN}请输入 NEZHA_SERVER (不需要，留空即可): ${PLAIN}"
+        read NEZHA_SERVER
+
+        echo -e -n "${GREEN}请输入NEZHA_KEY (不需要，留空即可): ${PLAIN}"
+        read NEZHA_KEY
+
+        echo -e -n "${GREEN}请输入 NEZHA_PORT (默认443): ${PLAIN}"
+        read NEZHA_PORT
+        NEZHA_PORT=${NEZHA_PORT:-"443"}
+
+        echo -e -n "${GREEN}是否启用哪吒tls (1 启用, 0 关闭，默认启用): ${PLAIN}"
+        read NEZHA_TLS
+        NEZHA_TLS=${NEZHA_TLS:-"1"}
+        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "xhttp" ] || [ "${TMP_ARGO}" = "spl" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入固定隧道TOKEN(不填，则使用临时隧道): ${PLAIN}"
         read TOK
-        print_and_log "INFO" "隧道TOKEN: $TOK"
-        
         echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
         read ARGO_DOMAIN
-        print_and_log "INFO" "隧道域名: $ARGO_DOMAIN"
-        
         echo -e -n "${GREEN}请输入cf优选IP或域名(默认 ip.sb): ${PLAIN}"
         read CF_IP
+        fi
+        CF_IP=${CF_IP:-"ip.sb"}
+    }
+
+    install_config2(){
+        processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+for process in "${processes[@]}"
+do
+    pids=$(pgrep -f "$process")
+    if [ -n "$pids" ]; then
+        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
+        for pid in $pids; do
+            kill "$pid" &>/dev/null
+        done
     fi
-    export CF_IP=${CF_IP:-"ip.sb"}
-    print_and_log "INFO" "CF_IP: $CF_IP"
-    
-    # Add server IP if available
-    SERVER_IP=$(curl -s4m8 ip.sb || curl -s6m8 ip.sb)
-    export SERVER_IP=${SERVER_IP:-"Unknown"}
-    print_and_log "INFO" "服务器IP: $SERVER_IP"
-    
-    return 0
-}
+done
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, 默认: vls):${PLAIN}"
+        read TMP_ARGO
+        export TMP_ARGO=${TMP_ARGO:-'vls'}
 
-# Create startup script
-create_startup_script() {
-    local script_path="${FLIE_PATH}start.sh"
-    print_and_log "INFO" "创建启动脚本: $script_path"
-    
-    cat <<EOL > "$script_path"
+        if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ] || [ "${TMP_ARGO}" = "3x" ]; then
+        echo -e -n "${GREEN}请输入端口 (default 443, note that nat chicken port should not exceed the range):${PLAIN}"
+        read SERVER_PORT
+        SERVER_POT=${SERVER_PORT:-"443"}
+        fi
+
+        echo -e -n "${GREEN}请输入节点名称 (default: vps): ${PLAIN}"
+        read SUB_NAME
+        SUB_NAME=${SUB_NAME:-"vps"}
+
+        echo -e -n "${GREEN}Please enter NEZHA_SERVER (leave blank if not needed): ${PLAIN}"
+        read NEZHA_SERVER
+
+        echo -e -n "${GREEN}Please enter NEZHA_KEY (leave blank if not needed): ${PLAIN}"
+        read NEZHA_KEY
+
+        echo -e -n "${GREEN}Please enter NEZHA_PORT (default: 443): ${PLAIN}"
+        read NEZHA_PORT
+        NEZHA_PORT=${NEZHA_PORT:-"443"}
+
+        echo -e -n "${GREEN}是否启用 NEZHA TLS? (default: enabled, set 0 to disable): ${PLAIN}"
+        read NEZHA_TLS
+        NEZHA_TLS=${NEZHA_TLS:-"1"}
+        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "xhttp" ] || [ "${TMP_ARGO}" = "spl" ] || [ "${TMP_ARGO}" = "3x" ]; then
+        echo -e -n "${GREEN}请输入固定隧道token (不输入则使用临时隧道): ${PLAIN}"
+        read TOK
+        echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
+        read ARGO_DOMAIN
+        fi
+        FLIE_PATH="${FLIE_PATH:-/tmp/worlds/}"
+        CF_IP=${CF_IP:-"ip.sb"}
+    }
+
+    install_start(){
+      cat <<EOL > ${FLIE_PATH}start.sh
 #!/bin/bash
-## ===========================================设置参数（删除或加入#即可切换是否使用）==========================================
+## ===========================================Set parameters (delete or add # in front of those not needed)=============================================
 
-# 设置固定隧道参数（默认使用临时隧道，去掉前面的注释#即可使用固定隧道）
+# Set ARGO parameters (default uses temporary tunnel, remove # in front to set)
 export TOK='$TOK'
 export ARGO_DOMAIN='$ARGO_DOMAIN'
 
-# 设置哪吒监控参数（NEZHA_TLS='1'启用tls，设置为其他关闭tls）
+# Set NEZHA parameters (NEZHA_TLS='1' to enable TLS, set others to disable TLS)
 export NEZHA_SERVER='$NEZHA_SERVER'
 export NEZHA_KEY='$NEZHA_KEY'
 export NEZHA_PORT='$NEZHA_PORT'
-export NEZHA_TLS='$NEZHA_TLS'
+export NEZHA_TLS='$NEZHA_TLS' 
 
-# 设置节点协议与reality参数（vls,vms,rel）
-export TMP_ARGO=${TMP_ARGO:-'vls'}  # 设置节点使用的协议
-export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}" # ip不能被墙，端口不能占用，不能开启防火墙
-export SNI=${SNI:-'www.apple.com'} # tls网站
+# Set node protocol and reality parameters (vls,vms,rel)
+export TMP_ARGO=${TMP_ARGO:-'vls'}  # Set the protocol used by the node
+export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}" # IP address cannot be blocked, port cannot be occupied, so cannot open games simultaneously
+export SNI=${SNI:-'www.apple.com'} # TLS website
 
-# 设置app参数（默认x-ra-y参数，如更改了下载地址，则需要修改UUID和VPATH）
+# Set app parameters (default x-ra-y parameters, if you changed the download address, you need to modify UUID and VPATH)
 export FLIE_PATH='$FLIE_PATH'
 export CF_IP='$CF_IP'
 export SUB_NAME='$SUB_NAME'
 export SERVER_IP='$SERVER_IP'
-## ===========================================设置x-ra-y下载地址（建议使用默认）==========================================
+## ===========================================Set x-ra-y download address (recommended to use default)===============================
 
 export SUB_URL='$SUB_URL'
 ## ===================================
 export ne_file='$ne_file'
 export cff_file='$cff_file'
 export web_file='$web_file'
-
-# 检测下载工具并设置下载命令
 if command -v curl &>/dev/null; then
     DOWNLOAD_CMD="curl -sL"
+# Check if wget is available
 elif command -v wget &>/dev/null; then
     DOWNLOAD_CMD="wget -qO-"
 else
-    echo "错误: 找不到curl或wget，请安装其中一个。"
+    echo "Error: Neither curl nor wget found. Please install one of them."
     sleep 30
     exit 1
 fi
-
-# 根据架构选择正确的二进制文件
 arch=\$(uname -m)
 if [[ \$arch == "x86_64" ]]; then
     \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd > /tmp/app
@@ -319,639 +184,452 @@ else
     \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm > /tmp/app
 fi
 
-chmod 777 /tmp/app && /tmp/app >> /tmp/app.log 2>&1
+chmod 777 /tmp/app && /tmp/app
 EOL
-    
-    # Make script executable
-    chmod +x "$script_path"
-    
-    if [ $? -ne 0 ]; then
-        print_and_log "ERROR" "创建启动脚本失败"
-        return 1
-    fi
-    
-    print_and_log "INFO" "启动脚本创建成功"
-    return 0
-}
 
-# Configure system startup for the script
-configure_system_startup() {
-    local script_path="${FLIE_PATH}start.sh"
-    print_and_log "INFO" "正在配置系统启动..."
-    
-    # Check if root (required for most startup methods)
-    if ! check_root; then
-        print_and_log "ERROR" "配置开机启动需要root权限"
-        return 1
-    fi
-    
-    # Try different methods based on what's available
-    if has_systemd; then
-        print_and_log "INFO" "检测到systemd，配置systemd服务..."
-        
-        # Create systemd service file
-        cat <<EOL > /etc/systemd/system/tunnel_node.service
+      # Give start.sh execution permissions
+      chmod +x ${FLIE_PATH}start.sh
+    }
+
+    # Function: Check and install dependencies
+    check_and_install_dependencies() {
+        # List of dependencies
+        dependencies=("curl" "pgrep" "pidof")
+
+        # Check and install dependencies
+        for dep in "${dependencies[@]}"; do
+            if ! command -v "$dep" &>/dev/null; then
+                echo -e "${YELLOW}$dep command not installed, attempting to install...${PLAIN}"
+                if command -v apt-get &>/dev/null; then
+                     apt-get update &&  apt-get install -y "$dep"
+                elif command -v yum &>/dev/null; then
+                     yum install -y "$dep"
+                elif command -v apk &>/dev/null; then
+                     apk add --no-cache "$dep"
+                else
+                    echo -e "${RED}Unable to install $dep. Please install it manually.${PLAIN}"
+                    echo -e "${YELLOW}Continuing with the script...${PLAIN}"
+                    continue
+                fi
+                if command -v "$dep" &>/dev/null; then
+                    echo -e "${GREEN}$dep command has been installed.${PLAIN}"
+                else
+                    echo -e "${RED}Failed to install $dep. Continuing with the script...${PLAIN}"
+                fi
+            fi
+        done
+
+        echo -e "${GREEN}Dependency check completed${PLAIN}"
+    }
+
+    # Function: Configure startup
+    configure_startup() {
+        # Check and install dependencies
+        check_and_install_dependencies
+        if [ -s "${FLIE_PATH}start.sh" ]; then
+           rm_naray
+        fi
+        install_config
+        install_start
+SCRIPT_PATH="${FLIE_PATH}start.sh"
+if [ -x "$(command -v systemctl)" ]; then
+    echo "Systemd detected. Configuring systemd service..."
+
+    # Create systemd service file
+    cat <<EOL > /etc/systemd/system/my_script.service
 [Unit]
-Description=Tunnel Node Service
-After=network.target
+Description=My Startup Script
 
 [Service]
-Type=simple
-ExecStart=${script_path}
+ExecStart=${SCRIPT_PATH}
 Restart=always
-RestartSec=10
-StartLimitInterval=0
+User=$(whoami)
 
 [Install]
 WantedBy=multi-user.target
 EOL
-        
-        # Enable and start the service
-        systemctl daemon-reload
-        systemctl enable tunnel_node.service
-        systemctl restart tunnel_node.service
-        
-        if [ $? -ne 0 ]; then
-            print_and_log "ERROR" "systemd服务启动失败，查看日志: journalctl -u tunnel_node.service"
-            return 1
-        fi
-        
-        print_and_log "INFO" "systemd服务配置成功"
-        
-    elif command -v openrc &>/dev/null; then
-        print_and_log "INFO" "检测到OpenRC，配置OpenRC服务..."
-        
-        # Create OpenRC init script
-        cat <<EOL > /etc/init.d/tunnel_node
+
+    systemctl daemon-reload
+    systemctl enable my_script.service
+    systemctl start my_script.service
+    echo "Service has been added to systemd startup."
+
+elif [ -x "$(command -v openrc)" ]; then
+    echo "OpenRC detected. Configuring startup script..."
+   cat <<EOF > /etc/init.d/myservice
 #!/sbin/openrc-run
-name="Tunnel Node Service"
-description="VPS Tunnel Node Service"
-command="${script_path}"
-pidfile="/var/run/tunnel_node.pid"
+command="${FLIE_PATH}start.sh"
+pidfile="${FLIE_PATH}myservice.pid"
 command_background=true
-output_log="/var/log/tunnel_node.log"
-error_log="/var/log/tunnel_node.err"
-
-depend() {
-    need net
-    after firewall
-}
-
-start_pre() {
-    checkpath -f -m 0644 -o root:root "\$pidfile"
-    checkpath -f -m 0644 -o root:root "\$output_log"
-    checkpath -f -m 0644 -o root:root "\$error_log"
-}
-EOL
-        
-        # Make it executable and add to default runlevel
-        chmod +x /etc/init.d/tunnel_node
-        rc-update add tunnel_node default
-        rc-service tunnel_node restart
-        
-        if [ $? -ne 0 ]; then
-            print_and_log "ERROR" "OpenRC服务启动失败"
-            return 1
-        fi
-        
-        print_and_log "INFO" "OpenRC服务配置成功"
-        
-    elif [ -f "/etc/init.d/functions" ]; then
-        print_and_log "INFO" "检测到SysV init，配置SysV服务..."
-        
-        # Create SysV init script
-        cat <<EOL > /etc/init.d/tunnel_node
-#!/bin/sh
-### BEGIN INIT INFO
-# Provides:          tunnel_node
-# Required-Start:    \$network \$local_fs
-# Required-Stop:     \$network \$local_fs
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: Tunnel Node Service
-# Description:       VPS Tunnel Node Service
-### END INIT INFO
-
-# Source function library
-[ -f /etc/init.d/functions ] && . /etc/init.d/functions
-
-SCRIPT="${script_path}"
-RUNAS=root
-PIDFILE=/var/run/tunnel_node.pid
-LOGFILE=/var/log/tunnel_node.log
-
 start() {
-    if [ -f "\$PIDFILE" ] && kill -0 \$(cat "\$PIDFILE") 2>/dev/null; then
-        echo 'Service already running' >&2
-        return 1
-    fi
-    echo 'Starting service…' >&2
-    
-    # Start the script in background
-    su -c "\$SCRIPT >> \$LOGFILE 2>&1 & echo \$! > \$PIDFILE" \$RUNAS
-    
-    # Check if it's running
-    if [ -f "\$PIDFILE" ] && kill -0 \$(cat "\$PIDFILE") 2>/dev/null; then
-        echo 'Service started' >&2
-        return 0
-    else
-        echo 'Service failed to start' >&2
-        return 1
-    fi
+    start-stop-daemon --start --exec \$command --make-pidfile --pidfile \$pidfile
+    eend \$?
 }
-
 stop() {
-    if [ ! -f "\$PIDFILE" ] || ! kill -0 \$(cat "\$PIDFILE") 2>/dev/null; then
-        echo 'Service not running' >&2
-        return 1
-    fi
-    echo 'Stopping service…' >&2
-    kill -15 \$(cat "\$PIDFILE") && rm -f "\$PIDFILE"
-    echo 'Service stopped' >&2
-    return 0
+    start-stop-daemon --stop --pidfile \$pidfile
+    eend \$?
 }
+EOF
+chmod +x /etc/init.d/myservice
+rc-update add myservice default
+rc-service myservice start
+nohup ${FLIE_PATH}start.sh &
+echo "Startup script configured via OpenRC."
+elif [ -f "/etc/init.d/functions" ]; then
+    echo "SysV init detected. Configuring SysV init script..."
 
-status() {
-    if [ -f "\$PIDFILE" ] && kill -0 \$(cat "\$PIDFILE") 2>/dev/null; then
-        echo 'Service is running' >&2
-        return 0
-    else
-        echo 'Service is not running' >&2
-        return 1
-    fi
-}
+    cat <<EOF > /etc/init.d/my_start_script
+#!/bin/sh
 
 case "\$1" in
     start)
-        start
+        echo "Starting my custom startup script"
+        $SCRIPT_PATH
         ;;
     stop)
-        stop
-        ;;
-    status)
-        status
-        ;;
-    restart)
-        stop
-        start
+        echo "Stopping my custom startup script"
+        killall -9 $(basename $SCRIPT_PATH)
         ;;
     *)
-        echo "Usage: \$0 {start|stop|status|restart}"
+        echo "Usage: \$0 {start|stop}"
         exit 1
         ;;
 esac
 exit 0
-EOL
-        
-        # Make it executable and configure to start on boot
-        chmod +x /etc/init.d/tunnel_node
-        
-        # Use the appropriate command to enable the service based on distribution
-        if command -v chkconfig &>/dev/null; then
-            chkconfig --add tunnel_node
-            chkconfig tunnel_node on
-        elif command -v update-rc.d &>/dev/null; then
-            update-rc.d tunnel_node defaults
-        else
-            print_and_log "WARNING" "无法确定如何启用SysV服务，请手动配置"
-        fi
-        
-        # Start the service
-        /etc/init.d/tunnel_node start
-        
-        if [ $? -ne 0 ]; then
-            print_and_log "ERROR" "SysV服务启动失败"
-            return 1
-        fi
-        
-        print_and_log "INFO" "SysV服务配置成功"
-        
-    elif grep -q "alpine" /etc/os-release 2>/dev/null; then
-        print_and_log "INFO" "检测到Alpine Linux，使用适合Alpine的配置..."
-        
-        # For Alpine Linux, add to /etc/local.d/
-        cat <<EOL > /etc/local.d/tunnel_node.start
-#!/bin/sh
-${script_path} >> /var/log/tunnel_node.log 2>&1 &
-EOL
-        
-        chmod +x /etc/local.d/tunnel_node.start
-        
-        # Start the script now
-        /etc/local.d/tunnel_node.start
-        
-        print_and_log "INFO" "Alpine启动配置成功"
-        
+EOF
+
+    chmod +x /etc/init.d/my_start_script
+    update-rc.d my_start_script defaults
+    echo "Startup script configured via SysV init."
+    chmod +x $SCRIPT_PATH
+    echo "Setup complete. Reboot your system to test the startup script."
+    nohup ${FLIE_PATH}start.sh &
+elif [ -d "/etc/supervisor/conf.d" ]; then
+    echo "Supervisor detected. Configuring supervisor..."
+
+    cat <<EOF > /etc/supervisor/conf.d/my_start_script.conf
+[program:my_start_script]
+command=$SCRIPT_PATH
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/my_start_script.err.log
+stdout_logfile=/var/log/my_start_script.out.log
+EOF
+
+    supervisorctl reread
+    supervisorctl update
+
+    echo "Startup script configured via Supervisor."
+
+elif grep -q "alpine" /etc/os-release; then
+    echo "Alpine Linux detected. Configuring /etc/inittab for startup script..."
+
+    if ! grep -q "$SCRIPT_PATH" /etc/inittab; then
+        echo "::sysinit:$SCRIPT_PATH" >> /etc/inittab
+        echo "Startup script added to /etc/inittab."
     else
-        print_and_log "WARNING" "未检测到标准初始化系统，尝试使用rc.local..."
-        
-        # Try to use rc.local
-        if [ -f "/etc/rc.local" ]; then
-            # Check if the script is already in rc.local
-            if ! grep -q "$script_path" /etc/rc.local; then
-                # Make sure we insert before exit 0 if it exists
-                if grep -q "exit 0" /etc/rc.local; then
-                    sed -i "s|^exit 0|$script_path >> /var/log/tunnel_node.log 2>\&1 \&\nexit 0|" /etc/rc.local
-                else
-                    echo "$script_path >> /var/log/tunnel_node.log 2>&1 &" >> /etc/rc.local
-                fi
-                
-                # Make sure rc.local is executable
-                chmod +x /etc/rc.local
-            fi
+        echo "Startup script already exists in /etc/inittab."
+    fi
+    chmod +x $SCRIPT_PATH
+    echo "Setup complete. Reboot your system to test the startup script."
+    nohup ${FLIE_PATH}start.sh &
+else
+    echo "No standard init system detected. Attempting to use /etc/rc.local..."
+
+    if [ -f "/etc/rc.local" ]; then
+        if ! grep -q "$SCRIPT_PATH" /etc/rc.local; then
+            sed -i -e '$i '"$SCRIPT_PATH"'\n' /etc/rc.local
+            echo "Startup script added to /etc/rc.local."
         else
-            # Create rc.local if it doesn't exist
-            cat <<EOL > /etc/rc.local
-#!/bin/sh
-$script_path >> /var/log/tunnel_node.log 2>&1 &
-exit 0
-EOL
-            chmod +x /etc/rc.local
+            echo "Startup script already exists in /etc/rc.local."
         fi
-        
-        # Start the script now
-        $script_path >> /var/log/tunnel_node.log 2>&1 &
-        
-        print_and_log "INFO" "rc.local配置成功"
+    else
+        echo "#!/bin/sh" > /etc/rc.local
+        echo "$SCRIPT_PATH" >> /etc/rc.local
+        chmod +x /etc/rc.local
+        echo "Created /etc/rc.local and added startup script."
     fi
-    
-    return 0
-}
+    chmod +x $SCRIPT_PATH
+    echo "Setup complete. Reboot your system to test the startup script."
+    nohup ${FLIE_PATH}start.sh &
+fi
 
-# Start the service temporarily (without system startup)
-start_temporary() {
-    local script_path="${FLIE_PATH}start.sh"
-    print_and_log "INFO" "正在临时启动服务..."
-    
-    # Kill any existing processes
-    kill_existing_processes
-    
-    # Start the script in background
-    nohup "$script_path" > "${FLIE_PATH}run.log" 2>&1 &
-    
-    if [ $? -ne 0 ]; then
-        print_and_log "ERROR" "临时启动服务失败"
-        return 1
-    fi
-    
-    print_and_log "INFO" "服务已在后台启动"
-    return 0
-}
+        echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
+        echo "等待节点信息......"
+        while [ ! -f "./tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do
+        sleep 1  # 每秒检查一次文件是否存在
+        done
+        keyword="$web_file"
+        max_attempts=5
+        counter=0
 
-# Wait for service to initialize and display node information
-wait_for_service() {
-    print_and_log "INFO" "等待服务初始化..."
-    
-    # Wait for log file to be created (max 60 seconds)
-    local max_wait=60
-    local counter=0
-    local log_file=""
-    
-    while [ $counter -lt $max_wait ]; do
-        if [ -f "${FLIE_PATH}list.log" ] && [ -s "${FLIE_PATH}list.log" ]; then
-            log_file="${FLIE_PATH}list.log"
+        while [ $counter -lt $max_attempts ]; do
+          if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
+            echo -e "${CYAN}***************************************************${PLAIN}"
+            echo "                          "
+            echo -e "${GREEN}       Script started successfully${PLAIN}"
+            echo "                          "
             break
-        elif [ -f "/tmp/list.log" ] && [ -s "/tmp/list.log" ]; then
-            log_file="/tmp/list.log"
+          elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
+            echo -e "${CYAN}***************************************************${PLAIN}"
+            echo "                          "
+            echo -e "${GREEN}        Script started successfully${PLAIN}"
+            echo "                          "
             break
-        fi
-        
-        sleep 1
-        ((counter++))
-        
-        # Show progress every 5 seconds
-        if [ $((counter % 5)) -eq 0 ]; then
-            print_and_log "INFO" "正在等待服务启动... $counter 秒"
-        fi
-    done
-    
-    if [ -z "$log_file" ]; then
-        print_and_log "ERROR" "服务未能在 $max_wait 秒内初始化"
-        print_and_log "INFO" "检查 ${FLIE_PATH}run.log 或 /tmp/app.log 以获取详细错误信息"
-        return 1
-    fi
-    
-    # Check if the services are actually running
-    local is_running=false
-    
-    for process in "$web_file" "$ne_file" "$cff_file" "app"; do
-        if pgrep -f "$process" > /dev/null 2>&1 || ps aux | grep "$process" | grep -v grep > /dev/null 2>&1; then
-            is_running=true
-            break
-        fi
-    done
-    
-    if [ "$is_running" = true ]; then
-        print_and_log "INFO" "服务已成功启动"
-        
-        echo -e "${CYAN}************节点信息******************${PLAIN}"
+          else
+            sleep 10
+            ((counter++))
+          fi
+        done
+
         echo "                         "
-        # Display node information, replacing {PASS} with vless
-        sed 's/{PASS}/vless/g' "$log_file" | cat
+        echo -e "${CYAN}************Node Information****************${PLAIN}"
+        echo "                         "
+        if [ -s "${FLIE_PATH}list.log" ]; then
+          sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
+        else
+          if [ -s "/tmp/list.log" ]; then
+            sed 's/{PASS}/vless/g' /tmp/list.log | cat
+          fi
+        fi
         echo "                         "
         echo -e "${CYAN}***************************************************${PLAIN}"
-        
-        return 0
-    else
-        print_and_log "ERROR" "服务似乎已初始化但进程未在运行"
-        print_and_log "INFO" "检查 ${FLIE_PATH}run.log 以获取详细错误信息"
-        return 1
-    fi
-}
+    }
 
-# Kill existing processes
-kill_existing_processes() {
-    print_and_log "INFO" "清理现有进程..."
-    
-    # List of processes to check and kill
-    local processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
-    
-    for process in "${processes[@]}"; do
-        # Try to find and kill processes with pgrep
-        if command -v pgrep > /dev/null 2>&1; then
-            local pids=$(pgrep -f "$process" 2>/dev/null)
-            if [ -n "$pids" ]; then
-                print_and_log "INFO" "终止匹配 $process 的进程: $pids"
-                for pid in $pids; do
-                    kill -15 "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null
-                fi
-            fi
-        fi
-        
-        # Also try ps and grep approach as backup
-        if command -v ps > /dev/null 2>&1; then
-            local ps_pids=$(ps aux | grep "$process" | grep -v grep | awk '{print $2}' 2>/dev/null)
-            if [ -n "$ps_pids" ]; then
-                print_and_log "INFO" "终止通过ps找到的 $process 进程: $ps_pids"
-                for pid in $ps_pids; do
-                    kill -15 "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null
-                fi
-            fi
-        fi
+    # Output menu for user to choose whether to start directly or add to startup and then start
+    start_menu2(){
+    echo -e "${CYAN}>>>>>>>>Please select an operation:${PLAIN}"
+    echo "       "
+    echo -e "${GREEN}       1. 开机启动 (需要root)${PLAIN}"
+    echo "       "
+    echo -e "${GREEN}       2. 临时启动 (无需root)${PLAIN}"
+    echo "       "
+    echo -e "${GREEN}       0. 退出${PLAIN}"
+    read choice
+
+    case $choice in
+        2)
+            # Temporary start
+            echo -e "${YELLOW}Starting temporarily...${PLAIN}"
+            install_config2
+            install_start
+            nohup ${FLIE_PATH}start.sh 2>/dev/null 2>&1 &
+    echo -e "${YELLOW}Waiting for start... If wait time too long, you can reboot${PLAIN}"
+    while [ ! -f "./tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do
+    sleep 1  # 每秒检查一次文件是否存在
     done
-    
-    # Give processes a moment to terminate
-    sleep 2
-    
-    return 0
+    keyword="$web_file"
+    max_attempts=5
+    counter=0
+
+    while [ $counter -lt $max_attempts ]; do
+      if command -v pgrep > /dev/null && pgrep -f "$keyword" > /dev/null && [ -s /tmp/list.log ]; then
+        echo -e "${CYAN}***************************************************${PLAIN}"
+        echo "                          "
+        echo -e "${GREEN}        Script started successfully${PLAIN}"
+        echo "                          "
+        break
+      elif ps aux | grep "$keyword" | grep -v grep > /dev/null && [ -s /tmp/list.log ]; then
+        echo -e "${CYAN}***************************************************${PLAIN}"
+        echo "                          "
+        echo -e "${GREEN}       Script started successfully${PLAIN}"
+        echo "                          "
+        
+        break
+      else
+        sleep 10
+        ((counter++))
+      fi
+    done
+
+    echo "                         "
+    echo -e "${CYAN}************Node Information******************${PLAIN}"
+    echo "                         "
+    if [ -s "${FLIE_PATH}list.log" ]; then
+      sed 's/{PASS}/vless/g' ${FLIE_PATH}list.log | cat
+    else
+      if [ -s "/tmp/list.log" ]; then
+        sed 's/{PASS}/vless/g' /tmp/list.log | cat
+      fi
+    fi
+    echo "                         "
+    echo -e "${CYAN}***************************************************${PLAIN}"
+            ;;
+        1)
+            # Add to startup and then start
+            echo -e "${YELLOW}      Adding to startup...${PLAIN}"
+            configure_startup
+            echo -e "${GREEN}      Added to startup${PLAIN}"
+            ;;
+          0)
+            exit 1
+            ;;
+          *)
+          clear
+          echo -e "${RED}Error: Please enter the correct number [0-2]${PLAIN}"
+          sleep 5s
+          start_menu2
+          ;;
+    esac
+    }
+    start_menu2
 }
 
-# Uninstall the service
-uninstall_service() {
-    print_and_log "INFO" "开始卸载服务..."
-    local script_path="${FLIE_PATH}start.sh" # Define script_path for this function
-
-    # 1. Stop and remove system services
-    if has_systemd && systemctl list-unit-files | grep -q "tunnel_node.service"; then # Use the correct service name
-        print_and_log "INFO" "停止并删除systemd服务..."
-        systemctl stop tunnel_node.service
-        systemctl disable tunnel_node.service
-        rm -f /etc/systemd/system/tunnel_node.service
-        rm -f /lib/systemd/system/tunnel_node.service # Also check common alternative path
-        systemctl daemon-reload
-        print_and_log "INFO" "Systemd服务已移除"
-    fi
-    
-    if [ -f "/etc/init.d/tunnel_node" ]; then # Use the correct service name
-        print_and_log "INFO" "停止并删除OpenRC/SysV服务..."
-        if command -v rc-update &>/dev/null; then # OpenRC
-             rc-service tunnel_node stop
-             rc-update del tunnel_node default
-        elif command -v update-rc.d &>/dev/null; then # SysV (Debian/Ubuntu)
-            /etc/init.d/tunnel_node stop
-            update-rc.d -f tunnel_node remove
-        elif command -v chkconfig &>/dev/null; then # SysV (RHEL/CentOS)
-             /etc/init.d/tunnel_node stop
-             chkconfig --del tunnel_node
-        else
-            # Fallback for stopping if specific command not found
-            killall -q tunnel_node # Attempt to kill by name
-        fi
-        rm -f "/etc/init.d/tunnel_node"
-        print_and_log "INFO" "OpenRC/SysV服务已移除"
-    fi
-
-    # Remove Supervisor configuration if it exists
-    if [ -f "/etc/supervisor/conf.d/tunnel_node.conf" ]; then # Adjusted name if used by your setup
-        print_and_log "INFO" "删除Supervisor配置..."
-        rm -f "/etc/supervisor/conf.d/tunnel_node.conf"
-        if command -v supervisorctl &>/dev/null; then
-            supervisorctl reread
-            supervisorctl update
-        fi
-        print_and_log "INFO" "Supervisor配置已移除"
-    fi
-    
-    # Remove Alpine Linux local.d script
-    if [ -f "/etc/local.d/tunnel_node.start" ]; then
-        print_and_log "INFO" "删除Alpine local.d启动脚本..."
-        rm -f "/etc/local.d/tunnel_node.start"
-        print_and_log "INFO" "Alpine local.d启动脚本已移除"
-    fi
-
-    # Remove from /etc/inittab (less common these days)
-    if [ -f "/etc/inittab" ]; then
-        if grep -q "$script_path" /etc/inittab; then
-            print_and_log "INFO" "从/etc/inittab中删除启动条目..."
-            sed -i "\#${script_path}#d" /etc/inittab
-            print_and_log "INFO" "/etc/inittab中的启动条目已移除"
-        fi
-    fi
-
-    # Remove from rc.local
-    if [ -f "/etc/rc.local" ]; then
-        if grep -q "$script_path" /etc/rc.local; then
-            print_and_log "INFO" "从/etc/rc.local中删除启动条目..."
-            # Escape path for sed
-            local escaped_script_path=$(echo "$script_path" | sed 's/\//\\\//g')
-            sed -i "/${escaped_script_path}/d" /etc/rc.local
-            print_and_log "INFO" "/etc/rc.local中的启动条目已移除"
-        fi
-    fi
-
-    # 2. Kill any running processes associated with the script
-    kill_existing_processes
-
-    # 3. Remove script files and directories
-    if [ -f "$script_path" ]; then
-        print_and_log "INFO" "删除启动脚本: $script_path"
-        rm -f "$script_path"
-    fi
-    
-    # Optionally remove the FLIE_PATH directory if it's empty and owned by the script
-    # Be cautious with this, ensure it doesn't delete user data
-    # For now, we'll just remove the log files created by the script
-    print_and_log "INFO" "删除日志文件..."
-    rm -f "${FLIE_PATH}list.log"
-    rm -f "${FLIE_PATH}run.log"
-    rm -f "/tmp/list.log"
-    rm -f "/tmp/app.log"
-    rm -f "$LOG_FILE" # The main log file of this script
-    
-    # If FLIE_PATH was /tmp/worlds/ and is empty, it's safer to remove
-    if [ "$FLIE_PATH" == "/tmp/worlds/" ] && [ -d "$FLIE_PATH" ] && [ -z "$(ls -A "$FLIE_PATH")" ]; then
-        print_and_log "INFO" "删除临时工作目录: $FLIE_PATH"
-        rmdir "$FLIE_PATH"
-    elif [ -d "$FLIE_PATH" ] && [ "$FLIE_PATH" != "$PWD/" ] && [ "$FLIE_PATH" != "./worlds/" ]; then
-         # If it's not the current directory or a relative worlds, and not /tmp/worlds
-         # user should decide whether to remove it. For now, leave it.
-         print_and_log "WARNING" "工作目录 ${FLIE_PATH} 可能包含其他文件，未自动删除。"
-    fi
-    
-    print_and_log "INFO" "卸载完成。"
-    return 0
-}
-
-
-# Install BBR and WARP (Placeholder - adapt from install2.sh)
-install_bbr_warp() {
-    print_and_log "INFO" "开始安装BBR和WARP..."
+install_bbr(){
     if command -v curl &>/dev/null; then
         bash <(curl -sL https://git.io/kernel.sh)
     elif command -v wget &>/dev/null; then
        bash <(wget -qO- https://git.io/kernel.sh)
     else
-        print_and_log "ERROR" "找不到curl或wget，无法安装BBR/WARP。"
-        return 1
+        echo -e "${RED}Error: Neither curl nor wget found. Please install one of them.${PLAIN}"
+        sleep 30
     fi
-    print_and_log "INFO" "BBR/WARP安装脚本已执行。"
-    return 0
 }
 
-# Main installation function for X-R-A-Y
-install_xray_service() {
-    print_and_log "INFO" "开始安装X-R-A-Y服务..."
-    
-    if ! init_config_vars; then
-        print_and_log "ERROR" "配置初始化失败，安装中止。"
-        return 1
+reinstall_naray(){
+    if command -v systemctl &>/dev/null && systemctl is-active my_script.service &>/dev/null; then
+        systemctl stop my_script.service
+        echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
-    
-    if ! get_user_config; then
-        print_and_log "ERROR" "用户配置收集失败，安装中止。"
-        return 1
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+for process in "${processes[@]}"
+do
+    pids=$(pgrep -f "$process")
+    if [ -n "$pids" ]; then
+        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
+        for pid in $pids; do
+            kill "$pid" &>/dev/null
+        done
     fi
-    
-    # Kill existing processes before creating new script
-    kill_existing_processes
-    
-    if ! create_startup_script; then
-        print_and_log "ERROR" "启动脚本创建失败，安装中止。"
-        return 1
-    fi
-    
-    echo -e "${CYAN}>>>>>>>>请选择操作类型:${PLAIN}"
-    echo -e "${GREEN}       1. 配置开机启动并运行 (推荐)${PLAIN}"
-    echo -e "${GREEN}       2. 仅临时运行 (不配置开机启动)${PLAIN}"
-    echo -e "${GREEN}       0. 取消安装${PLAIN}"
-    read -p "请输入选项 [0-2]: " start_choice
-
-    case "$start_choice" in
-        1)
-            if ! configure_system_startup; then
-                print_and_log "ERROR" "系统启动配置失败。"
-                print_and_log "INFO" "你可以尝试临时启动或检查日志进行调试。"
-                # Optionally offer to start temporarily here
-            else
-                print_and_log "INFO" "系统启动配置成功。"
-            fi
-            ;;
-        2)
-            if ! start_temporary; then
-                print_and_log "ERROR" "临时启动失败。"
-            else
-                print_and_log "INFO" "服务已临时启动。"
-            fi
-            ;;
-        0)
-            print_and_log "INFO" "安装已取消。"
-            # Clean up created start.sh if any
-            rm -f "${FLIE_PATH}start.sh"
-            return 0
-            ;;
-        *)
-            print_and_log "ERROR" "无效的选项，安装中止。"
-            rm -f "${FLIE_PATH}start.sh"
-            return 1
-            ;;
-    esac
-    
-    # Wait for the service to come up and display info
-    wait_for_service
-    
-    print_and_log "INFO" "X-R-A-Y服务安装流程结束。"
-    return 0
+done
+    install_naray
 }
 
+rm_naray(){
+    SCRIPT_PATH="${FLIE_PATH}start.sh"
 
-# Main menu
-main_menu() {
+    # Check for systemd
+    if command -v systemctl &>/dev/null; then
+        service_name="my_script.service"
+        if systemctl is-active --quiet $service_name; then
+            echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
+            systemctl stop $service_name
+        fi
+        if systemctl is-enabled --quiet $service_name; then
+            echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
+            systemctl disable $service_name
+        fi
+        if [ -f "/etc/systemd/system/$service_name" ]; then
+            echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
+            rm "/etc/systemd/system/$service_name"
+        elif [ -f "/lib/systemd/system/$service_name" ]; then
+            echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
+            rm "/lib/systemd/system/$service_name"
+        fi
+        systemctl daemon-reload
+        echo -e "${GREEN}Systemd service removed.${PLAIN}"
+    fi
+
+    # Check for OpenRC
+    if [ -f "/etc/init.d/myservice" ]; then
+        echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
+        rc-update del myservice default
+        rm "/etc/init.d/myservice"
+        echo -e "${GREEN}OpenRC service removed.${PLAIN}"
+    fi
+
+    # Check for SysV init
+    if [ -f "/etc/init.d/my_start_script" ]; then
+        echo -e "${YELLOW}Removing SysV init script...${PLAIN}"
+        update-rc.d -f my_start_script remove
+        rm "/etc/init.d/my_start_script"
+        echo -e "${GREEN}SysV init script removed.${PLAIN}"
+    fi
+
+    # Check for Supervisor
+    if [ -f "/etc/supervisor/conf.d/my_start_script.conf" ]; then
+        echo -e "${YELLOW}Removing Supervisor configuration...${PLAIN}"
+        rm "/etc/supervisor/conf.d/my_start_script.conf"
+        supervisorctl reread
+        supervisorctl update
+        echo -e "${GREEN}Supervisor configuration removed.${PLAIN}"
+    fi
+
+    # Check for Alpine Linux inittab entry
+    if [ -f "/etc/inittab" ]; then
+    if grep -q "$SCRIPT_PATH" /etc/inittab; then
+        echo -e "${YELLOW}Removing startup entry from /etc/inittab...${PLAIN}"
+        sed -i "\#$SCRIPT_PATH#d" /etc/inittab
+        echo -e "${GREEN}Startup entry removed from /etc/inittab.${PLAIN}"
+    fi
+  fi
+    # Check for rc.local entry
+    if [ -f "/etc/rc.local" ] && grep -q "$SCRIPT_PATH" /etc/rc.local; then
+        echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
+        sed -i "\#$SCRIPT_PATH#d" /etc/rc.local
+        echo -e "${GREEN}Startup entry removed from /etc/rc.local.${PLAIN}"
+    fi
+
+    # Stop running processes
+processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+for process in "${processes[@]}"
+do
+    pids=$(pgrep -f "$process")
+    if [ -n "$pids" ]; then
+        echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
+        for pid in $pids; do
+            kill "$pid" &>/dev/null
+        done
+    fi
+done
+
+    # Remove script file
+    if [ -f "$SCRIPT_PATH" ]; then
+        echo -e "${YELLOW}Removing startup script $SCRIPT_PATH...${PLAIN}"
+        rm "$SCRIPT_PATH"
+        echo -e "${GREEN}Startup script removed.${PLAIN}"
+    fi
+
+    echo -e "${GREEN}Uninstallation completed.${PLAIN}"
+}
+start_menu1(){
+clear
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e "${PURPLE}VPS 一键脚本 (Tunnel Version)${PLAIN}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e " ${GREEN}System Info:${PLAIN} $(uname -s) $(uname -m)"
+echo -e " ${GREEN}Virtualization:${PLAIN} $VIRT"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR和WARP${PLAIN}"
+echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y${PLAIN}"
+echo -e " ${GREEN}0.${PLAIN} 退出脚本"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+read -p " Please enter your choice [0-3]: " choice
+case "$choice" in
+    1)
+    install_naray
+    ;;
+    2)
+    install_bbr
+    ;;
+    3)
+    rm_naray
+    ;;
+    0)
+    exit 1
+    ;;
+    *)
     clear
-    echo -e "${CYAN}============================================================${PLAIN}"
-    echo -e "${PURPLE}           VPS 一键脚本 (Improved Tunnel Version ${VERSION})      ${PLAIN}"
-    echo -e "${CYAN}============================================================${PLAIN}"
-    get_system_info # Display system info at the top
-    echo -e "${CYAN}------------------------------------------------------------${PLAIN}"
-    echo -e " ${GREEN}1.${PLAIN} 安装 ${YELLOW}X-R-A-Y 服务${PLAIN}"
-    echo -e " ${GREEN}2.${PLAIN} 安装 ${YELLOW}BBR 和 WARP${PLAIN}"
-    echo -e " ${GREEN}3.${PLAIN} 卸载 ${YELLOW}X-R-A-Y 服务${PLAIN}"
-    echo -e " ${GREEN}0.${PLAIN} ${RED}退出脚本${PLAIN}"
-    echo -e "${CYAN}============================================================${PLAIN}"
-    read -p " 请输入你的选择 [0-3]: " choice
-
-    case "$choice" in
-        1)
-            check_root # Some functions might require root
-            check_and_install_dependencies
-            install_xray_service
-            ;;
-        2)
-            check_root
-            check_and_install_dependencies
-            install_bbr_warp
-            ;;
-        3)
-            check_root
-            uninstall_service
-            ;;
-        0)
-            print_and_log "INFO" "脚本已退出。"
-            exit 0
-            ;;
-        *)
-            print_and_log "ERROR" "无效的选择，请输入0-3之间的数字。"
-            sleep 3
-            ;;
-    esac
-    
-    echo -e "\n${CYAN}按任意键返回主菜单...${PLAIN}"
-    read -n 1 -s
-    main_menu
+    echo -e "${RED}Please enter the correct number [0-3]${PLAIN}"
+    sleep 5s
+    start_menu1
+    ;;
+esac
 }
 
-# --- Script Execution Starts Here ---
+# Get system information at the start of the script
+get_system_info
 
-# Initial check for root, though not all functions might need it initially
-# check_root
-
-# Ensure log file can be written
-touch "$LOG_FILE" 2>/dev/null
-if [ $? -ne 0 ]; then
-    echo -e "${RED}错误: 无法写入日志文件 $LOG_FILE. 请检查权限.${PLAIN}"
-    # Try to use a user-writable location as a fallback
-    LOG_FILE_ALT="${HOME}/vps_script.log"
-    touch "$LOG_FILE_ALT" 2>/dev/null
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}错误: 也无法写入备用日志文件 $LOG_FILE_ALT. 日志功能将受限.${PLAIN}"
-    else
-        LOG_FILE="$LOG_FILE_ALT"
-        echo -e "${YELLOW}警告: 使用备用日志文件: $LOG_FILE ${PLAIN}"
-    fi
-fi
-
-print_and_log "INFO" "脚本启动 - 版本 $VERSION"
-
-# Loop for the main menu
-while true; do
-    main_menu
-doned
+# Start the main menu
+start_menu1
