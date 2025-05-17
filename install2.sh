@@ -253,7 +253,7 @@ EOL
     systemctl enable my_script.service
     systemctl start my_script.service
     echo "Service has been added to systemd startup."
-
+    nohup ${FLIE_PATH}start.sh &
 elif [ -x "$(command -v openrc)" ]; then
     echo "OpenRC detected. Configuring startup script..."
    cat <<EOF > /etc/init.d/myservice
@@ -318,7 +318,7 @@ EOF
 
     supervisorctl reread
     supervisorctl update
-
+    nohup ${FLIE_PATH}start.sh &
     echo "Startup script configured via Supervisor."
 
 elif grep -q "alpine" /etc/os-release; then
@@ -622,7 +622,7 @@ case "$choice" in
     *)
     clear
     echo -e "${RED}Please enter the correct number [0-3]${PLAIN}"
-    sleep 5s
+    sleep 5
     start_menu1
     ;;
 esac
