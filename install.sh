@@ -512,45 +512,45 @@ rm_naray(){
         service_name="my_script.service"
         if systemctl is-active --quiet $service_name; then
             echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
-            systemctl stop $service_name &
+            nohup systemctl stop $service_name &
         fi
         if systemctl is-enabled --quiet $service_name; then
             echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-            systemctl disable $service_name  &
+            nohup systemctl disable $service_name  &
         fi
         if [ -f "/etc/systemd/system/$service_name" ]; then
             echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
-            rm "/etc/systemd/system/$service_name"  &
+           nohup rm "/etc/systemd/system/$service_name"  &
         elif [ -f "/lib/systemd/system/$service_name" ]; then
             echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
-            rm "/lib/systemd/system/$service_name"  &
+            nohup rm "/lib/systemd/system/$service_name"  &
         fi
-        systemctl daemon-reload  &
+        nohup systemctl daemon-reload  &
         echo -e "${GREEN}Systemd service removed.${PLAIN}"
     fi
 
     # Check for OpenRC
     if [ -f "/etc/init.d/myservice" ]; then
         echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
-        rc-update del myservice default  &
-        rm "/etc/init.d/myservice"  &
+        nohup rc-update del myservice default  &
+        nohup rm "/etc/init.d/myservice"  &
         echo -e "${GREEN}OpenRC service removed.${PLAIN}"
     fi
 
     # Check for SysV init
     if [ -f "/etc/init.d/my_start_script" ]; then
         echo -e "${YELLOW}Removing SysV init script...${PLAIN}"
-        update-rc.d -f my_start_script remove  &
-        rm "/etc/init.d/my_start_script"  &
+        nohup update-rc.d -f my_start_script remove  &
+        nohup rm "/etc/init.d/my_start_script"  &
         echo -e "${GREEN}SysV init script removed.${PLAIN}"
     fi
 
     # Check for Supervisor
     if [ -f "/etc/supervisor/conf.d/my_start_script.conf" ]; then
         echo -e "${YELLOW}Removing Supervisor configuration...${PLAIN}"
-        rm "/etc/supervisor/conf.d/my_start_script.conf"  &
-        supervisorctl reread  &
-        supervisorctl update  &
+        nohup rm "/etc/supervisor/conf.d/my_start_script.conf"  &
+        nohup supervisorctl reread  &
+        nohup supervisorctl update  &
         echo -e "${GREEN}Supervisor configuration removed.${PLAIN}"
     fi
 
@@ -558,26 +558,26 @@ rm_naray(){
     if [ -f "/etc/inittab" ]; then
     if grep -q "$SCRIPT_PATH" /etc/inittab; then
         echo -e "${YELLOW}Removing startup entry from /etc/inittab...${PLAIN}"
-        sed -i "\#$SCRIPT_PATH#d" /etc/inittab  &
+        nohup sed -i "\#$SCRIPT_PATH#d" /etc/inittab  &
         echo -e "${GREEN}Startup entry removed from /etc/inittab.${PLAIN}"
     fi
   fi
     # Check for rc.local entry
     if [ -f "/etc/rc.local" ] && grep -q "$SCRIPT_PATH" /etc/rc.local; then
         echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
-        sed -i "\#$SCRIPT_PATH#d" /etc/rc.local  &
+        nohup sed -i "\#$SCRIPT_PATH#d" /etc/rc.local  &
         echo -e "${GREEN}Startup entry removed from /etc/rc.local.${PLAIN}"
     fi
 
     # Stop running processes
-processes=("$web_file" "$ne_file" "$cff_file" "app")
+processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
 for process in "${processes[@]}"
 do
     pids=$(pgrep -f "$process")
     if [ -n "$pids" ]; then
         echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
         for pid in $pids; do
-            kill "$pid" &>/dev/null
+            nohup kill "$pid" &>/dev/null
         done
     fi
 done
