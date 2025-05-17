@@ -354,7 +354,7 @@ else
 fi
 
         echo -e "${YELLOW}Waiting for the script to start... If the wait time is too long, the judgment may be inaccurate. You can observe NEZHA to judge by yourself or try restarting.${PLAIN}"
-        echo "等待节点信息......"
+        echo "......等待节点信息.....约30S左右......"
         while [ ! -f "./tmp/list.log" ] && [ ! -f "${FLIE_PATH}list.log" ] ; do
         sleep 1  # 每秒检查一次文件是否存在
         done
