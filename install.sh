@@ -40,10 +40,10 @@ install_naray(){
     fi
     
     if [ -f "/tmp/list.log" ]; then
-    rm -rf /tmp/list.log
+      rm -rf /tmp/list.log
     fi
     if [ -f "${FLIE_PATH}list.log" ]; then
-    rm -rf ${FLIE_PATH}list.log
+      rm -rf ${FLIE_PATH}list.log
     fi
 
     install_config(){
@@ -487,44 +487,56 @@ install_bbr(){
 
 reinstall_naray(){
     if command -v systemctl &>/dev/null && systemctl is-active my_script.service &>/dev/null; then
-        systemctl stop my_script.service
+        systemctl stop my_script.service &
         echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
     processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
-for process in "${processes[@]}"
-do
-    pids=$(pgrep -f "$process")
-    if [ -n "$pids" ]; then
+    for process in "${processes[@]}"
+    do
+     pids=$(pgrep -f "$process")
+     if [ -n "$pids" ]; then
         echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
         for pid in $pids; do
             kill "$pid" &>/dev/null
         done
-    fi
-done
-    install_naray
+     fi
+     done
+     install_naray
 }
 
 rm_naray(){
-    # Check for systemd
-    if command -v systemctl &>/dev/null; then
-        service_name="my_script.service"
-        if systemctl is-active --quiet $service_name; then
-            echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
-            nohup systemctl stop $service_name &
-        fi
-        if systemctl is-enabled --quiet $service_name; then
-            echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-            nohup systemctl disable $service_name  &
-        fi
-        if [ -f "/etc/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
-           nohup rm "/etc/systemd/system/$service_name"  &
-        elif [ -f "/lib/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
-            nohup rm "/lib/systemd/system/$service_name"  &
-        fi
-        nohup systemctl daemon-reload  &
-        echo -e "${GREEN}Systemd service removed.${PLAIN}"
+# Check if systemctl is available
+if command -v systemctl &>/dev/null; then
+      service_name="my_script.service"
+    
+    # Stop the service if it's running
+    if systemctl is-active --quiet "$service_name"; then
+        echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
+        systemctl stop "$service_name"
+        # Wait for service to fully stop
+        sleep 2
+    fi
+    
+    # Disable the service if it's enabled
+    if systemctl is-enabled --quiet "$service_name"; then
+        echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
+        systemctl disable "$service_name"
+    fi
+    
+    # Remove service file
+    if [ -f "/etc/systemd/system/$service_name" ]; then
+        echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
+        rm "/etc/systemd/system/$service_name"
+    elif [ -f "/lib/systemd/system/$service_name" ]; then
+        echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
+        rm "/lib/systemd/system/$service_name"
+    fi
+    
+    # Reload systemd configuration
+    systemctl daemon-reload
+      echo -e "${GREEN}Systemd service removed successfully.${PLAIN}"
+    else
+       echo -e "${YELLOW}systemctl not found. This system may not use systemd.${PLAIN}"
     fi
 
     # Check for OpenRC
@@ -568,18 +580,25 @@ rm_naray(){
     fi
 
     # Stop running processes
-processes=("$web_file" "$ne_file" "$cff_file" "app")
-for process in "${processes[@]}"
-do
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+    for process in "${processes[@]}"
+    do
     pids=$(pgrep -f "$process")
-    if [ -n "$pids" ]; then
+      if [ -n "$pids" ]; then
         echo -e "${YELLOW}Stopping processes matching $process...${PLAIN}"
         for pid in $pids; do
-            nohup kill "$pid" &>/dev/null
+            kill "$pid" &>/dev/null
         done
+      fi
+    done
+    # Remove script file
+    if [ -f "$SCRIPT_PATH" ]; then
+        echo -e "${YELLOW}Removing startup script $SCRIPT_PATH...${PLAIN}"
+        rm -rf "$SCRIPT_PATH"
+        echo -e "${GREEN}Startup script removed.${PLAIN}"
     fi
-done
 
+    echo -e "${GREEN}Uninstallation completed.${PLAIN}"
 }
 start_menu1(){
 clear
