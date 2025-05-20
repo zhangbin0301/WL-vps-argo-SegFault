@@ -47,9 +47,9 @@ install_naray(){
     fi
 
     install_config(){
-        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hy2, tuic,3x 默认: vls):${PLAIN}"
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hy2, tuic,3x 默认: 3x):${PLAIN}"
         read TMP_ARGO
-        export TMP_ARGO=${TMP_ARGO:-'vls'}  
+        export TMP_ARGO=${TMP_ARGO:-'3x'}  
 
         if [ "${TMP_ARGO}" = "rel" ] || [ "${TMP_ARGO}" = "hy2" ] || [ "${TMP_ARGO}" = "hys" ] || [ "${TMP_ARGO}" = "tuic" ] || [ "${TMP_ARGO}" = "3x" ]; then
         echo -e -n "${GREEN}请输入节点端口 (默认443):${PLAIN}"
