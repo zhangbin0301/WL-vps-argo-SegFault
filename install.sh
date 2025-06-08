@@ -83,6 +83,8 @@ install_naray(){
         read CF_IP
         fi
         CF_IP=${CF_IP:-"ip.sb"}
+        echo -e -n "${GREEN}节点上传TG,格式: "CHAT_ID BOT_TOKEN": ${PLAIN}"
+        read TG
     }
 
     install_config2(){
@@ -160,7 +162,7 @@ export CF_IP='$CF_IP'
 export SUB_NAME='$SUB_NAME'
 export SERVER_IP='$SERVER_IP'
 ## ===========================================Set x-ra-y download address (recommended to use default)===============================
-
+export TG='$TG'
 export SUB_URL='$SUB_URL'
 ## ===================================
 export ne_file='$ne_file'
