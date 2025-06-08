@@ -84,6 +84,8 @@ install_naray(){
         read CF_IP
         fi
         CF_IP=${CF_IP:-"ip.sb"}
+        echo -e -n "${GREEN}节点上传TG,格式: "CHAT_ID BOT_TOKEN": ${PLAIN}"
+        read TG
     }
 
     install_config2(){
@@ -154,7 +156,7 @@ export NEZHA_TLS='$NEZHA_TLS'
 export TMP_ARGO=${TMP_ARGO:-'vls'}  # Set the protocol used by the node
 export SERVER_PORT="${SERVER_PORT:-${PORT:-443}}" # IP address cannot be blocked, port cannot be occupied, so cannot open games simultaneously
 export SNI=${SNI:-'www.apple.com'} # TLS website
-
+export TG='$TG'
 # Set app parameters (default x-ra-y parameters, if you changed the download address, you need to modify UUID and VPATH)
 export FLIE_PATH='$FLIE_PATH'
 export CF_IP='$CF_IP'
