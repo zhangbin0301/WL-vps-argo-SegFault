@@ -163,7 +163,9 @@ export SUB_NAME='$SUB_NAME'
 export SERVER_IP='$SERVER_IP'
 ## ===========================================Set x-ra-y download address (recommended to use default)===============================
 export TG='$TG'
-export SUB_URL='$SUB_URL'
+#export SUB_URL='$SUB_URL'
+export SUB_URL=${SUB_URL:-'https://sub.smartdns.eu.org/upload-ea4909ef-7ca6-4b46-bf2e-6c07896ef338'} 
+
 ## ===================================
 export ne_file='$ne_file'
 export cff_file='$cff_file'
