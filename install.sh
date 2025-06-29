@@ -509,30 +509,6 @@ reinstall_naray(){
 rm_naray(){
     SCRIPT_PATH="${FLIE_PATH}start.sh"
 
-    # Check for systemd
-    if command -v systemctl &>/dev/null; then
-        service_name="my_script.service"
-        if systemctl is-active --quiet $service_name; then
-            echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
-            systemctl stop $service_name
-            systemctl daemon-reload
-        fi
-        if systemctl is-enabled --quiet $service_name; then
-            echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-            systemctl disable $service_name
-            systemctl daemon-reload
-        fi
-        if [ -f "/etc/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
-            rm "/etc/systemd/system/$service_name"
-        elif [ -f "/lib/systemd/system/$service_name" ]; then
-            echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
-            rm "/lib/systemd/system/$service_name"
-        fi
-        
-        echo -e "${GREEN}Systemd service removed.${PLAIN}"
-    fi
-
     # Check for OpenRC
     if [ -f "/etc/init.d/myservice" ]; then
         echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
