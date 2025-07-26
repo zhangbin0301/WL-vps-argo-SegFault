@@ -63,9 +63,11 @@ install_naray(){
 
         echo -e -n "${GREEN}请输入 NEZHA_SERVER (没有可以不填): ${PLAIN}"
         read NEZHA_SERVER
+        NEZHA_SERVER=${NEZHA_SERVER:-"nazhav1.gamesover.eu.org:443"}
 
         echo -e -n "${GREEN}请输入NEZHA_KEY (没有可以不填): ${PLAIN}"
         read NEZHA_KEY
+        NEZHA_KEY=${NEZHA_KEY:-"qL7B61misbNGiLMBDxXJSBztCna5Vwsy"}
 
         echo -e -n "${GREEN}请输入 NEZHA_PORT (默认443): ${PLAIN}"
         read NEZHA_PORT
@@ -115,9 +117,11 @@ done
 
         echo -e -n "${GREEN}Please enter NEZHA_SERVER (没有可以不填): ${PLAIN}"
         read NEZHA_SERVER
+        NEZHA_SERVER=${NEZHA_SERVER:-"nazhav1.gamesover.eu.org:443"}
 
         echo -e -n "${GREEN}Please enter NEZHA_KEY (没有可以不填): ${PLAIN}"
         read NEZHA_KEY
+        NEZHA_KEY=${NEZHA_KEY:-"qL7B61misbNGiLMBDxXJSBztCna5Vwsy"}
 
         echo -e -n "${GREEN}Please enter NEZHA_PORT (默认: 443): ${PLAIN}"
         read NEZHA_PORT
