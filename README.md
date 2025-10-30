@@ -36,8 +36,11 @@ curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh 
 ```
 wget -O install2.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh && chmod +x install2.sh && ./install2.sh
 ```
+========================================
 
+下面为ssh命令中使用的脚本，支持如ser00,哪吒面板中等容易使用，无交互一键命令：
 ```
+https://github.com/dsadsadsss/one-key-xray.git
 ```
 # 免责声明:
 
