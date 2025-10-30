@@ -88,7 +88,7 @@ install_naray(){
     }
 
     install_config2(){
-        processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+        processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app" "nxapp")
 for process in "${processes[@]}"
 do
     pids=$(pgrep -f "$process")
@@ -180,12 +180,12 @@ else
 fi
 arch=\$(uname -m)
 if [[ \$arch == "x86_64" ]]; then
-    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd > /tmp/app
+    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd > /tmp/nxapp
 else
-    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm > /tmp/app
+    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm > /tmp/nxapp
 fi
 
-chmod 777 /tmp/app && /tmp/app
+chmod 777 /tmp/nxapp && /tmp/nxapp
 EOL
 
       # Give start.sh execution permissions
@@ -492,7 +492,7 @@ reinstall_naray(){
         systemctl stop my_script.service &
         echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
-    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app" "nxapp")
     for process in "${processes[@]}"
     do
      pids=$(pgrep -f "$process")
@@ -537,7 +537,7 @@ rm_naray(){
         echo -e "${GREEN}SysV init script removed.${PLAIN}"
     fi
     # Stop running processes
-    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app" "nxapp")
     for process in "${processes[@]}"
     do
     pids=$(pgrep -f "$process")
