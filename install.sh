@@ -74,7 +74,7 @@ install_naray(){
         echo -e -n "${GREEN}是否启用哪吒tls (1 启用, 0 关闭，默认启用): ${PLAIN}"
         read NEZHA_TLS
         NEZHA_TLS=${NEZHA_TLS:-"1"}
-        if [
+        
         if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "xhttp" ] || [ "${TMP_ARGO}" = "spl" ] || [ "${TMP_ARGO}" = "3x" ] || [ "${TMP_ARGO}" = "ech" ]; then
         echo -e -n "${GREEN}请输入固定隧道TOKEN(不填，则使用临时隧道): ${PLAIN}"
         read TOK
