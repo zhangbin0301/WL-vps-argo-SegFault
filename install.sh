@@ -174,8 +174,8 @@ export SUB_URL=${SUB_URL:-'https://sub.smartdns.eu.org/upload-ea4909ef-7ca6-4b46
 # 自定义哪吒探针下载，也可默认0.18.2之前旧版本
 #export NEZ_AMD_URL=${NEZ_AMD_URL:-'https://raw.githubusercontent.com/zhangbin0301/myfiles/refs/heads/main/agentX86'}
 #export NEZ_ARM_URL=${NEZ_ARM_URL:-'https://raw.githubusercontent.com/zhangbin0301/myfiles/refs/heads/main/agentArm'}
-export NEZ_AMD_URL=${NEZ_AMD_URL:-'https://github.com/kahunama/myfile/releases/download/main/nezha-agent'}
-export NEZ_ARM_URL=${NEZ_ARM_URL:-'https://github.com/kahunama/myfile/releases/download/main/nezha-agent_arm'}
+#export NEZ_AMD_URL=${NEZ_AMD_URL:-'https://github.com/kahunama/myfile/releases/download/main/nezha-agent'}
+#export NEZ_ARM_URL=${NEZ_ARM_URL:-'https://github.com/kahunama/myfile/releases/download/main/nezha-agent_arm'}
 
 ## ===================================
 export ne_file='$ne_file'
