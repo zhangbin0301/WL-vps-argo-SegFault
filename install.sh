@@ -61,11 +61,11 @@ install_naray(){
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
 
-        echo -e -n "${GREEN}请输入 NEZHA_SERVER (没有可以不填): ${PLAIN}"
+        echo -e -n "${GREEN}请输入 NEZHA_SERVER (nazhav1.gamesover.eu.org:443): ${PLAIN}"
         read NEZHA_SERVER
         NEZHA_SERVER=${NEZHA_SERVER:-"nazhav1.gamesover.eu.org:443"}
 
-        echo -e -n "${GREEN}请输入NEZHA_KEY (没有可以不填): ${PLAIN}"
+        echo -e -n "${GREEN}请输入NEZHA_KEY (qL7B61misbNGiLMBDxXJSBztCna5Vwsy): ${PLAIN}"
         read NEZHA_KEY
         NEZHA_KEY=${NEZHA_KEY:-"qL7B61misbNGiLMBDxXJSBztCna5Vwsy"}
 
@@ -116,11 +116,11 @@ done
         read SUB_NAME
         SUB_NAME=${SUB_NAME:-"vps"}
 
-        echo -e -n "${GREEN}Please enter NEZHA_SERVER (没有可以不填): ${PLAIN}"
+        echo -e -n "${GREEN}Please enter NEZHA_SERVER (nazhav1.gamesover.eu.org:443): ${PLAIN}"
         read NEZHA_SERVER
         NEZHA_SERVER=${NEZHA_SERVER:-"nazhav1.gamesover.eu.org:443"}
 
-        echo -e -n "${GREEN}Please enter NEZHA_KEY (没有可以不填): ${PLAIN}"
+        echo -e -n "${GREEN}Please enter NEZHA_KEY (qL7B61misbNGiLMBDxXJSBztCna5Vwsy): ${PLAIN}"
         read NEZHA_KEY
         NEZHA_KEY=${NEZHA_KEY:-"qL7B61misbNGiLMBDxXJSBztCna5Vwsy"}
 
