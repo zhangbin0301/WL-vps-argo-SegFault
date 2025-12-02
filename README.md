@@ -36,7 +36,14 @@ curl -sL https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh 
 ```
 wget -O install2.sh https://raw.githubusercontent.com/dsadsadsss/vps-argo/main/install2.sh && chmod +x install2.sh && ./install2.sh
 ```
-# 免声明:
+========================================
+
+下面为ssh命令中使用的脚本，支持如ser00,哪吒面板中等容器使用，无交互一键命令：
+
+```
+https://github.com/dsadsadsss/one-key-xray.git
+```
+# 免责声明:
 
 本仓库仅为自用备份，非开源项目，因为需要外链必须公开，但是任何人不得私自下载, 如果下载了，请于下载后 24 小时内删除, 不得用作任何商业用途, 文字、数据及图片均有所属版权。 
 

@@ -47,7 +47,7 @@ install_naray(){
     fi
 
     install_config(){
-        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hy2, tuic,3x 默认: 3x):${PLAIN}"
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hy2, tuic,3x，ech 默认: 3x):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'3x'}  
 
@@ -76,7 +76,8 @@ install_naray(){
         echo -e -n "${GREEN}是否启用哪吒tls (1 启用, 0 关闭，默认启用): ${PLAIN}"
         read NEZHA_TLS
         NEZHA_TLS=${NEZHA_TLS:-"1"}
-        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "xhttp" ] || [ "${TMP_ARGO}" = "spl" ] || [ "${TMP_ARGO}" = "3x" ]; then
+        
+        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "xhttp" ] || [ "${TMP_ARGO}" = "spl" ] || [ "${TMP_ARGO}" = "3x" ] || [ "${TMP_ARGO}" = "ech" ]; then
         echo -e -n "${GREEN}请输入固定隧道TOKEN(不填，则使用临时隧道): ${PLAIN}"
         read TOK
         echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
@@ -90,7 +91,7 @@ install_naray(){
     }
 
     install_config2(){
-        processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+        processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app" "nxapp")
 for process in "${processes[@]}"
 do
     pids=$(pgrep -f "$process")
@@ -101,7 +102,7 @@ do
         done
     fi
 done
-        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys, 默认: vls):${PLAIN}"
+        echo -e -n "${GREEN}请输入节点类型 (可选: vls, vms, rel, hys,ech 默认: vls):${PLAIN}"
         read TMP_ARGO
         export TMP_ARGO=${TMP_ARGO:-'vls'}
 
@@ -130,7 +131,7 @@ done
         echo -e -n "${GREEN}是否启用 NEZHA TLS? (default: enabled, set 0 to disable): ${PLAIN}"
         read NEZHA_TLS
         NEZHA_TLS=${NEZHA_TLS:-"1"}
-        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "xhttp" ] || [ "${TMP_ARGO}" = "spl" ] || [ "${TMP_ARGO}" = "3x" ]; then
+        if [ "${TMP_ARGO}" = "vls" ] || [ "${TMP_ARGO}" = "vms" ] || [ "${TMP_ARGO}" = "xhttp" ] || [ "${TMP_ARGO}" = "spl" ] || [ "${TMP_ARGO}" = "3x" ] || [ "${TMP_ARGO}" = "ech" ]; then
         echo -e -n "${GREEN}请输入固定隧道token (不输入则使用临时隧道): ${PLAIN}"
         read TOK
         echo -e -n "${GREEN}请输入固定隧道域名 (临时隧道不用填): ${PLAIN}"
@@ -192,12 +193,12 @@ else
 fi
 arch=\$(uname -m)
 if [[ \$arch == "x86_64" ]]; then
-    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd > /tmp/app
+    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-amd > /tmp/nxapp
 else
-    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm > /tmp/app
+    \$DOWNLOAD_CMD https://github.com/dsadsadsss/plutonodes/releases/download/xr/main-arm > /tmp/nxapp
 fi
 
-chmod 777 /tmp/app && /tmp/app
+chmod 777 /tmp/nxapp && /tmp/nxapp
 EOL
 
       # Give start.sh execution permissions
@@ -504,7 +505,7 @@ reinstall_naray(){
         systemctl stop my_script.service &
         echo -e "${GREEN}Service has been stopped.${PLAIN}"
     fi
-    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app" "nxapp")
     for process in "${processes[@]}"
     do
      pids=$(pgrep -f "$process")
@@ -519,88 +520,37 @@ reinstall_naray(){
 }
 
 rm_naray(){
+    SCRIPT_PATH="${FLIE_PATH}start.sh"
 
-# Check if systemctl is available and functional
-if command -v systemctl &>/dev/null && systemctl list-units --no-pager &>/dev/null; then
-    echo -e "${GREEN}Systemd is available and functional.${PLAIN}"
-    
-    # Stop the service if it's running
-    if systemctl is-active --quiet "$service_name" 2>/dev/null; then
-        echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
-        systemctl stop "$service_name" || echo -e "${RED}Failed to stop service.${PLAIN}"
-    fi
-    
-    # Disable the service if it's enabled
-    if systemctl is-enabled --quiet "$service_name" 2>/dev/null; then
-        echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
-        systemctl disable "$service_name" || echo -e "${RED}Failed to disable service.${PLAIN}"
-    fi
-    
-    # Remove service file with permission check
-    if [ -f "/etc/systemd/system/$service_name" ]; then
-        echo -e "${YELLOW}Attempting to remove service file /etc/systemd/system/$service_name...${PLAIN}"
-        if [ -w "/etc/systemd/system/$service_name" ] || [ "$(id -u)" -eq 0 ]; then
-            rm "/etc/systemd/system/$service_name" && echo -e "${GREEN}Service file removed.${PLAIN}" || echo -e "${RED}Failed to remove service file. Permission denied.${PLAIN}"
-        else
-            echo -e "${RED}Permission denied. Try running with sudo.${PLAIN}"
+    # Check for systemd
+    if command -v systemctl &>/dev/null; then
+        service_name="my_script.service"
+        if systemctl is-active --quiet $service_name; then
+            echo -e "${YELLOW}Service $service_name is active. Stopping...${PLAIN}"
+            systemctl stop $service_name
         fi
-    elif [ -f "/lib/systemd/system/$service_name" ]; then
-        echo -e "${YELLOW}Attempting to remove service file /lib/systemd/system/$service_name...${PLAIN}"
-        if [ -w "/lib/systemd/system/$service_name" ] || [ "$(id -u)" -eq 0 ]; then
-            rm "/lib/systemd/system/$service_name" && echo -e "${GREEN}Service file removed.${PLAIN}" || echo -e "${RED}Failed to remove service file. Permission denied.${PLAIN}"
-        else
-            echo -e "${RED}Permission denied. Try running with sudo.${PLAIN}"
+        if systemctl is-enabled --quiet $service_name; then
+            echo -e "${YELLOW}Disabling $service_name...${PLAIN}"
+            systemctl disable $service_name  
         fi
+        if [ -f "/etc/systemd/system/$service_name" ]; then
+            echo -e "${YELLOW}Removing service file /etc/systemd/system/$service_name...${PLAIN}"
+            rm "/etc/systemd/system/$service_name"
+        elif [ -f "/lib/systemd/system/$service_name" ]; then
+            echo -e "${YELLOW}Removing service file /lib/systemd/system/$service_name...${PLAIN}"
+            rm "/lib/systemd/system/$service_name"
+        fi
+        echo -e "${GREEN}Systemd service removed.${PLAIN}"
     fi
-    
-    # Reload systemd configuration with error handling
-    systemctl daemon-reload 2>/dev/null || echo -e "${RED}Failed to reload systemd configuration.${PLAIN}"
-    echo -e "${GREEN}Systemd service management completed.${PLAIN}"
-  else
-    echo -e "${YELLOW}Systemd is not available or not running properly.${PLAIN}"
-   fi
-    # Check for OpenRC
-    if [ -f "/etc/init.d/myservice" ]; then
-        echo -e "${YELLOW}Removing OpenRC service...${PLAIN}"
-        nohup rc-update del myservice default  &
-        nohup rm "/etc/init.d/myservice"  &
-        echo -e "${GREEN}OpenRC service removed.${PLAIN}"
-    fi
-
     # Check for SysV init
     if [ -f "/etc/init.d/my_start_script" ]; then
         echo -e "${YELLOW}Removing SysV init script...${PLAIN}"
-        nohup update-rc.d -f my_start_script remove  &
-        nohup rm "/etc/init.d/my_start_script"  &
+        update-rc.d -f my_start_script remove
+        rm "/etc/init.d/my_start_script"
         echo -e "${GREEN}SysV init script removed.${PLAIN}"
     fi
-
-    # Check for Supervisor
-    if [ -f "/etc/supervisor/conf.d/my_start_script.conf" ]; then
-        echo -e "${YELLOW}Removing Supervisor configuration...${PLAIN}"
-        nohup rm "/etc/supervisor/conf.d/my_start_script.conf"  &
-        nohup supervisorctl reread  &
-        nohup supervisorctl update  &
-        echo -e "${GREEN}Supervisor configuration removed.${PLAIN}"
-    fi
-
-    # Check for Alpine Linux inittab entry
-    if [ -f "/etc/inittab" ]; then
-    if grep -q "$SCRIPT_PATH" /etc/inittab; then
-        echo -e "${YELLOW}Removing startup entry from /etc/inittab...${PLAIN}"
-        nohup sed -i "\#$SCRIPT_PATH#d" /etc/inittab  &
-        echo -e "${GREEN}Startup entry removed from /etc/inittab.${PLAIN}"
-    fi
-  fi
-    # Check for rc.local entry
-    if [ -f "/etc/rc.local" ] && grep -q "$SCRIPT_PATH" /etc/rc.local; then
-        echo -e "${YELLOW}Removing startup entry from /etc/rc.local...${PLAIN}"
-        nohup sed -i "\#$SCRIPT_PATH#d" /etc/rc.local  &
-        echo -e "${GREEN}Startup entry removed from /etc/rc.local.${PLAIN}"
-    fi
-
     # Stop running processes
-    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app")
+    processes=("$web_file" "$ne_file" "$cff_file" "start.sh" "app" "nxapp")
     for process in "${processes[@]}"
     do
     pids=$(pgrep -f "$process")
